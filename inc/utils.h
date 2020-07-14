@@ -11,6 +11,8 @@
 #define LOG(format, ...)
 #endif
 
+void ret_json(char *code, char *message);
+
 void log_buffer_hex(const void *buffer, uint16_t buff_len);
 
 //data     要转换的字符串

@@ -9,7 +9,8 @@ typedef enum CMD_PARAM
     FILE_DOWNLOAD,
     FILE_UPLOAD,
     FILE_CREATE_DIR,
-    FILE_DELETE
+    FILE_DELETE,
+    DISK_TEST
 };
 
 int get_para(char *str);

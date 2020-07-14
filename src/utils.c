@@ -1,13 +1,26 @@
 #include "utils.h"
 #include <math.h>
-// #include <sys/stat.h>
 #include <assert.h>
-// #include <errno.h>
-// #include <dirent.h>
 #include <stdio.h>
 #include <string.h>
+#include "json-c/json.h"
 
 #define BYTES_PER_LINE 16
+
+void ret_json(char *code, char *message)
+{
+    json_object *j_cfg = json_object_new_object();
+    json_object *j_code = json_object_new_string(code);
+    json_object_object_add(j_cfg, "code", j_code);
+    json_object *j_msg = json_object_new_string(message);
+    json_object_object_add(j_cfg, "mssage", j_msg);
+
+    FCGI_printf("Status:200 OK\r\n");
+    FCGI_printf("Content-type: application/json;charset=utf-8\r\n"
+                "\r\n"
+                "%s",
+                json_object_to_json_string(j_cfg));
+}
 
 void log_buffer_hex(const void *buffer, uint16_t buff_len)
 {
