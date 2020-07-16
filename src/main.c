@@ -1,6 +1,7 @@
 #include <stdlib.h>
 #include <stdio.h>
 #include <string.h>
+#include <pthread.h>
 #include "fcgi_stdio.h"
 #include "get_parse.h"
 #include "utils.h"
@@ -20,17 +21,13 @@ int app_fcgi_init()
         //GET PARSE
         if (NULL == getenv("QUERY_STRING"))
         {
-            FCGI_printf("Status:201 ERR\r\n");
-            FCGI_printf("Content-type: text/html;charset=utf-8\r\n"
-                        "\r\n"
-                        "missing query params");
+            ret_json("500", "missing query params");
             continue;
         }
         int ret = get_para(getenv("QUERY_STRING"));
 
         LOG("ret = %d <br>", ret);
         //POST PARSE
-        // postLength = tonumber((uint8_t *)getenv("CONTENT_LENGTH"), strlen(getenv("CONTENT_LENGTH")));
         postLength = atoi((char *)getenv("CONTENT_LENGTH"));
         LOG("<br />CONTENT_LENGTH:%d<br />", postLength);
 
@@ -41,12 +38,8 @@ int app_fcgi_init()
         }
         else
         {
-            FCGI_printf("Status:201 ERR\r\n");
-            FCGI_printf("Content-type: application/json;charset=utf-8\r\n"
-                        "\r\n"
-                        "POST_BODY_ERROR");
+            ret_json("500", "POST_BODY_ERROR");
         }
-        // file_list_init();
     }
 
     return 0;
@@ -54,5 +47,10 @@ int app_fcgi_init()
 
 int main(void)
 {
-    app_fcgi_init();
+    pthread_t pthread_id;
+    pthread_create(&pthread_id, NULL, app_fcgi_init, NULL);
+    while (1)
+    {
+    }
+    return 0;
 }
