@@ -132,15 +132,34 @@ void file_upload(char *rootPath, int length, int nowReadLen, char *bufReadP, int
         nowReadLen--;
     }
 
-    int readCount;
-    char *buffer = (char *)malloc(bufLen); // 开辟缓存
-
-    while ((readCount = fread(buffer, 1, bufLen, stdin)) > 0)
+    while (length > 0)
     {
-        fwrite(buffer, readCount, 1, fp);
-    }
-    free(buffer);
+        if (length < bufLen)
+            nowReadLen = length;
+        else
+            nowReadLen = bufLen;
+        char postBuf[nowReadLen];
+        // LOG("%d\t%d\n", length, nowReadLen);
+        FCGI_fread(postBuf, sizeof(char), nowReadLen, stdin);
+        length -= nowReadLen;
+        postBuf[nowReadLen] = '\0';
 
+        char *bufP = postBuf;
+        while (nowReadLen > 0)
+        {
+            if (!strncmp(bufP, "\r\n--------", 10))
+            {
+                // LOG("-----\n");
+                // LOG("nowReadLen:%d\n", nowReadLen);
+                length = 0;
+                break;
+            }
+
+            fputc(*bufP, fp);
+            bufP++;
+            nowReadLen--;
+        }
+    }
     fclose(fp);
 
     //return
