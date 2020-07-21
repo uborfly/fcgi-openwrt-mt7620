@@ -115,57 +115,34 @@ void file_download(char *path)
     fclose(fp);
 }
 
-void file_upload(char *path, char *fileName)
+void file_upload(char *rootPath, int length, int nowReadLen, char *bufReadP, int bufLen)
 {
-    //check upper dir exist
-    char *retDirName = strrchr(path, '/');
-    printf("dest dir:%s\n", retDirName);
-    char upperDir[strlen(path) - strlen(retDirName)];
-    strncpy(upperDir, path, strlen(path) - strlen(retDirName));
-    upperDir[strlen(path) - strlen(retDirName)] = '\0';
-    printf("upperDir dir:%s\n", upperDir);
-    printf("path:%s\n", path);
-    struct stat statBuf;
-    if (access(upperDir, F_OK))
-    {
-        ret_json("500", "上级目录不存在");
-        return;
-    }
-
-    //check dir exist
-    printf("目录存在，判断是否为文件夹\n");
-
-    //is it dir
-    stat(path, &statBuf);
-    if (!S_ISDIR(statBuf.st_mode)) //判断是否是目录
-    {
-        ret_json("500", "上级目录不存在,有同名文件");
-        return;
-    }
-    LOG("recv fileName:%s\n", fileName);
-    strcat(path, fileName);
-    LOG("filePath:%s\n", path);
-
     //create file
-    char recvBuf[2048];
-    FILE *fp = fopen(path, "w+");
+    FILE *fp = fopen(rootPath, "wb+");
     if (NULL == fp)
     {
         LOG("file open err\n");
         return;
     }
-    fread(recvBuf, 1, 2048, stdin);
-    LOG("recvBuf:%s\n", recvBuf);
-
-    while (!feof(stdin))
+    length -= nowReadLen;
+    while (nowReadLen > 0)
     {
-        //read stream
-        fgets(recvBuf, 2048, stdin);
-
-        //write file
-        fputs(recvBuf, fp);
+        fputc(*bufReadP, fp);
+        bufReadP++;
+        nowReadLen--;
     }
+
+    int readCount;
+    char *buffer = (char *)malloc(bufLen); // 开辟缓存
+
+    while ((readCount = fread(buffer, 1, bufLen, stdin)) > 0)
+    {
+        fwrite(buffer, readCount, 1, fp);
+    }
+    free(buffer);
+
     fclose(fp);
+
     //return
     ret_json("200", "ok");
 }

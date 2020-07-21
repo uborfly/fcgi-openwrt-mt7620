@@ -96,7 +96,7 @@ void json_test()
     //打印j_cfg
     LOG("j_cfg:%s<br>", json_object_to_json_string(j_cfg));
 }
-#define bufLen 1024
+#define bufLen 1024 * 60
 #define ROOT "/mnt"
 int post_para(int cmd, int length)
 {
@@ -222,18 +222,18 @@ int post_para(int cmd, int length)
         sscanf(bufReadP, "%s\r\n%*s", token);
         LOG("token:%s<br>", token);
         LOG("globalToken:%s<br>", globalToken);
-        //verify token
-        if (strcmp(token, globalToken))
-        {
-            ret_json("500", "token无效");
-            break;
-        }
-        //check mount
-        if (dev_check())
-        {
-            ret_json("500", "设备未挂载");
-            break;
-        }
+        // //verify token
+        // if (strcmp(token, globalToken))
+        // {
+        //     ret_json("500", "token无效");
+        //     break;
+        // }
+        // //check mount
+        // if (dev_check())
+        // {
+        //     ret_json("500", "设备未挂载");
+        //     break;
+        // }
         char rootPath[] = ROOT;
         strcat(rootPath, path);
         file_list_display(rootPath);
@@ -274,18 +274,18 @@ int post_para(int cmd, int length)
         sscanf(bufReadP, "%s\r\n%*s", token);
         LOG("token:%s<br>", token);
         LOG("globalToken:%s<br>", globalToken);
-        //verify token
-        if (strcmp(token, globalToken))
-        {
-            ret_json("500", "token无效");
-            break;
-        }
-        //check mount
-        if (dev_check())
-        {
-            ret_json("500", "设备未挂载");
-            break;
-        }
+        // //verify token
+        // if (strcmp(token, globalToken))
+        // {
+        //     ret_json("500", "token无效");
+        //     break;
+        // }
+        // //check mount
+        // if (dev_check())
+        // {
+        //     ret_json("500", "设备未挂载");
+        //     break;
+        // }
         char rootPath[] = ROOT;
         strcat(rootPath, path);
         file_download(rootPath);
@@ -395,53 +395,9 @@ int post_para(int cmd, int length)
 
         nowReadLen -= strlen(postBuf) - strlen(bufReadP);
         LOG("nowReadLen:%d\n", nowReadLen);
-        //create file
-        FILE *fp = fopen(rootPath, "wb+");
-        if (NULL == fp)
-        {
-            LOG("file open err\n");
-            break;
-        }
-        length -= nowReadLen;
-        while (nowReadLen > 0)
-        {
-            fputc(*bufReadP, fp);
-            bufReadP++;
-            nowReadLen--;
-        }
 
-        while (length > 0)
-        {
-            if (length < bufLen)
-                nowReadLen = length;
-            else
-                nowReadLen = bufLen;
-            char postBuf[nowReadLen];
-            // LOG("%d\t%d\n", length, nowReadLen);
-            FCGI_fread(postBuf, sizeof(char), nowReadLen, stdin);
-            length -= nowReadLen;
-            postBuf[nowReadLen] = '\0';
+        file_upload(rootPath, length, nowReadLen, bufReadP, bufLen);
 
-            char *bufP = postBuf;
-            while (nowReadLen > 0)
-            {
-                if (!strncmp(bufP, "\r\n--------", 10))
-                {
-                    // LOG("-----\n");
-                    // LOG("nowReadLen:%d\n", nowReadLen);
-                    length = 0;
-                    break;
-                }
-
-                fputc(*bufP, fp);
-                bufP++;
-                nowReadLen--;
-            }
-
-            //return
-            ret_json("200", "ok");
-        }
-        fclose(fp);
         break;
     }
     case FILE_CREATE_DIR:
@@ -577,6 +533,7 @@ int post_para(int cmd, int length)
         gpio_direction(1, 1);
         gpio_write(1, atoi(path));
         LOG("out:%d\n", gpio_read(1));
+        ret_json("200", "ok");
         break;
     }
     default:

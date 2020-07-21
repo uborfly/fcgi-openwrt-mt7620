@@ -47,10 +47,11 @@ int app_fcgi_init()
 
 int main(void)
 {
-    pthread_t pthread_id;
-    pthread_create(&pthread_id, NULL, app_fcgi_init, NULL);
-    while (1)
-    {
-    }
+    app_fcgi_init();
+    // pthread_t pthread_id;
+    // pthread_create(&pthread_id, NULL, app_fcgi_init, NULL);
+    // while (1)
+    // {
+    // }
     return 0;
 }
