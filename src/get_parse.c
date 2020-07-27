@@ -55,6 +55,10 @@ int parse_para(int num)
         {
             ret = FILE_DELETE;
         }
+        else if (!strcasecmp("samba_config", getParam[i]))
+        {
+            ret = SAMBA_CONFIG;
+        }
         else if (!strcasecmp("disk_test", getParam[i]))
         {
             ret = DISK_TEST;

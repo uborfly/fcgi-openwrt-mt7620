@@ -292,7 +292,7 @@ int post_para(int cmd, int length)
         break;
     }
     case FILE_UPLOAD:
-    {
+    { /*
         //get path
         char *dataBuf;
         char *bufReadP;
@@ -397,7 +397,7 @@ int post_para(int cmd, int length)
         LOG("nowReadLen:%d\n", nowReadLen);
 
         file_upload(rootPath, length, nowReadLen, bufReadP, bufLen);
-
+*/
         break;
     }
     case FILE_CREATE_DIR:
@@ -502,6 +502,68 @@ int post_para(int cmd, int length)
         char rootPath[] = ROOT;
         strcat(rootPath, path);
         file_delete(rootPath);
+        break;
+    }
+    case SAMBA_CONFIG:
+    {
+        char *dataBuf;
+        char *bufReadP;
+        char userName[64];
+        char passwd[64];
+        int boundaryLen = 0;
+        bufReadP = postBuf;
+        //parse username
+        dataBuf = strstr(postBuf, "name=");
+        boundaryLen = strlen(postBuf) - strlen(dataBuf);
+        LOG("boundaryLen:%d\n", boundaryLen);
+        bufReadP += boundaryLen;
+        sscanf(dataBuf, "name=\"%s%*s", userName);
+        if (strcmp(userName, "username\""))
+        {
+            ret_json("500", "不符合规定的username");
+            break;
+        }
+        bufReadP += strlen(userName) + 7 + strlen("\r\n");
+
+        dataBuf = bufReadP;
+        sscanf(dataBuf, "%s\r\n%*s", userName);
+        LOG("username:%s\n", userName);
+
+        //parse passwd
+        bufReadP += boundaryLen + strlen(userName) + strlen("\r\n");
+
+        sscanf(bufReadP, " name=\"%s\"", passwd);
+        if (strcmp(passwd, "passwd\""))
+        {
+            ret_json("500", "不符合规定的passwd");
+            break;
+        }
+        bufReadP += strlen(passwd) + 7 + strlen("\r\n");
+
+        sscanf(bufReadP, "%s\r\n%*s", passwd);
+        LOG("passwd:%s\n", passwd);
+
+        //get token
+        char token[32];
+        bufReadP += boundaryLen + strlen(passwd) + 5 + strlen("\r\n");
+
+        sscanf(bufReadP, " name=\"%s\"", token);
+
+        bufReadP += strlen(token) + 7 + strlen("\n");
+
+        sscanf(bufReadP, "%s\r\n%*s", token);
+        LOG("token:%s\n", token);
+        LOG("globalToken:%s\n", globalToken);
+        // //verify token
+        // if (strcmp(token, globalToken))
+        // {
+        //     ret_json("500", "token无效");
+        //     break;
+        // }
+        //set samba username and passwd
+
+        ret_json("200", "ok");
+
         break;
     }
     case DISK_TEST:

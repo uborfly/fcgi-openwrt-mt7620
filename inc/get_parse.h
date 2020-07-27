@@ -10,6 +10,7 @@ typedef enum CMD_PARAM
     FILE_UPLOAD,
     FILE_CREATE_DIR,
     FILE_DELETE,
+    SAMBA_CONFIG,
     DISK_TEST
 };
 
