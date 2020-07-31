@@ -4,7 +4,7 @@
 #include <stdint.h>
 #include "fcgi_stdio.h"
 
-#define __DEBUGs
+#define __DEBUG
 #ifdef __DEBUG
 #define LOG(format, ...) FCGI_printf(format, ##__VA_ARGS__)
 #else

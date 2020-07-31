@@ -12,6 +12,7 @@
 #include "openssl/evp.h"
 #include "file_page.h"
 #include "gpio.h"
+#include "blkid/blkid.h"
 
 char globalToken[0x20];
 
@@ -71,31 +72,6 @@ void test_sm3()
     LOG("\n");
 }
 
-void json_test()
-{
-    //创建字符串型的json对象
-    json_object *j_code = json_object_new_string("200");
-    json_object *j_msg = json_object_new_string("ok");
-    //创建一个数组对象
-    json_object *j_array = json_object_new_array();
-    //给元素添加到数组末尾
-    json_object *j_data = json_object_new_object();
-    json_object_object_add(j_data, "name", json_object_new_string("file1"));
-    json_object_object_add(j_data, "create_name", json_object_new_string("20200709"));
-    json_object_object_add(j_data, "size", json_object_new_string("123"));
-
-    json_object_array_add(j_array, j_data);
-
-    // json_object_object_add(j_array, "", j_name);
-
-    //将上面创建的对象加入到json对象j_cfg中
-    json_object *j_cfg = json_object_new_object();
-    json_object_object_add(j_cfg, "code", j_code);
-    json_object_object_add(j_cfg, "message", j_msg);
-    json_object_object_add(j_cfg, "data", j_array);
-    //打印j_cfg
-    LOG("j_cfg:%s<br>", json_object_to_json_string(j_cfg));
-}
 #define bufLen 1024 * 60
 #define ROOT "/mnt"
 int post_para(int cmd, int length)
@@ -176,7 +152,7 @@ int post_para(int cmd, int length)
         json_object *j_code = json_object_new_string("200");
         json_object_object_add(j_cfg, "code", j_code);
         json_object *j_msg = json_object_new_string("ok");
-        json_object_object_add(j_cfg, "mssage", j_msg);
+        json_object_object_add(j_cfg, "message", j_msg);
         json_object *j_data = json_object_new_string(globalToken);
         json_object_object_add(j_cfg, "data", j_data);
 
@@ -222,18 +198,18 @@ int post_para(int cmd, int length)
         sscanf(bufReadP, "%s\r\n%*s", token);
         LOG("token:%s<br>", token);
         LOG("globalToken:%s<br>", globalToken);
-        // //verify token
-        // if (strcmp(token, globalToken))
-        // {
-        //     ret_json("500", "token无效");
-        //     break;
-        // }
-        // //check mount
-        // if (dev_check())
-        // {
-        //     ret_json("500", "设备未挂载");
-        //     break;
-        // }
+        //verify token
+        if (strcmp(token, globalToken))
+        {
+            ret_json("500", "token无效");
+            break;
+        }
+        //check mount
+        if (dev_check())
+        {
+            ret_json("500", "设备未挂载");
+            break;
+        }
         char rootPath[] = ROOT;
         strcat(rootPath, path);
         file_list_display(rootPath);
@@ -596,6 +572,76 @@ int post_para(int cmd, int length)
         gpio_write(1, atoi(path));
         LOG("out:%d\n", gpio_read(1));
         ret_json("200", "ok");
+        break;
+    }
+    case DEV_LIST:
+    {
+        char *dataBuf;
+        char *bufReadP;
+        char token[32];
+        int boundaryLen = 0;
+        bufReadP = postBuf;
+
+        dataBuf = strstr(postBuf, "name=");
+        boundaryLen = strlen(postBuf) - strlen(dataBuf);
+        LOG("boundaryLen:%d\n", boundaryLen);
+        bufReadP += boundaryLen;
+        sscanf(dataBuf, "name=\"%s%*s", token);
+        LOG("token:%s\n", token);
+        if (strcmp(token, "token\""))
+        {
+            ret_json("500", "不符合规定的token");
+            break;
+        }
+        bufReadP += strlen(token) + 7 + strlen("\r\n");
+
+        dataBuf = bufReadP;
+        sscanf(bufReadP, "%s\r\n%*s", token);
+        LOG("token:%s\n", token);
+        LOG("globalToken:%s\n", globalToken);
+        // //verify token
+        // if (strcmp(token, globalToken))
+        // {
+        //     ret_json("500", "token无效");
+        //     break;
+        // }
+
+        char path[] = "/dev/sda";
+        if (dev_check())
+        {
+            ret_json("500", "存储设备未连接");
+            break;
+        }
+        json_object *j_code = json_object_new_string("200");
+        json_object *j_msg = json_object_new_string("ok");
+
+        json_object *j_array = json_object_new_array();
+        for (int i = 1; i < 100; i++)
+        {
+            char pathBuf[11];
+
+            strcpy(pathBuf, path);
+            strcat(pathBuf, tostring(i));
+
+            if (access(pathBuf, F_OK))
+            {
+                // ret_json("500", "磁盘分区不存在");
+                continue;
+            }
+            json_object *j_data = json_object_new_string(pathBuf);
+            // LOG("%s\n", pathBuf);
+            json_object_array_add(j_array, j_data);
+        }
+        json_object *j_cfg = json_object_new_object();
+        json_object_object_add(j_cfg, "code", j_code);
+        json_object_object_add(j_cfg, "message", j_msg);
+        json_object_object_add(j_cfg, "data", j_array);
+
+        FCGI_printf("Status:200 OK\r\n");
+        FCGI_printf("Content-type: application/json;charset=utf-8\r\n"
+                    "\r\n"
+                    "%s",
+                    json_object_to_json_string(j_cfg));
         break;
     }
     default:

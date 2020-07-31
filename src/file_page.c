@@ -31,7 +31,7 @@ static void ret_file_path(const char *path, const char *fileName, struct json_ob
     json_object *j_data = json_object_new_object();
 
     json_object_object_add(j_data, "name", json_object_new_string(fileName));
-    json_object_object_add(j_data, "create_name", json_object_new_string(ctime(&statBuf.st_ctime)));
+    json_object_object_add(j_data, "create_time", json_object_new_string(ctime(&statBuf.st_ctime)));
     if (S_ISDIR(statBuf.st_mode)) //判断是否是目录
     {
         // FCGI_printf("<a href=\"http://192.168.1.1:8082%s\">%s</a><br>", filePath, fileName);

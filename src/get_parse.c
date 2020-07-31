@@ -63,6 +63,10 @@ int parse_para(int num)
         {
             ret = DISK_TEST;
         }
+        else if (!strcasecmp("dev_list", getParam[i]))
+        {
+            ret = DEV_LIST;
+        }
         else
         {
             ret = 0;
