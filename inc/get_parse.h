@@ -12,7 +12,8 @@ typedef enum CMD_PARAM
     FILE_DELETE,
     SAMBA_CONFIG,
     DISK_TEST,
-    DEV_LIST
+    DEV_LIST,
+    DISK_FORMAT
 };
 
 int get_para(char *str);

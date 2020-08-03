@@ -67,6 +67,10 @@ int parse_para(int num)
         {
             ret = DEV_LIST;
         }
+        else if (!strcasecmp("disk_format", getParam[i]))
+        {
+            ret = DISK_FORMAT;
+        }
         else
         {
             ret = 0;

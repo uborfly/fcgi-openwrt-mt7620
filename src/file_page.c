@@ -294,3 +294,9 @@ void file_delete(char *path)
     }
     //return
 }
+
+int disk_format(char *devName, char *devType)
+{
+
+    return 0;
+}

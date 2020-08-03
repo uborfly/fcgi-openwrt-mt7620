@@ -8,6 +8,7 @@ void file_download(char *path);
 void file_upload(char *rootPath, int length, int nowReadLen, char *bufReadP, int bufLen);
 void file_create_dir(char *path);
 void file_delete(char *path);
+int disk_format(char *devName, char *devType);
 
 int dev_check();
 

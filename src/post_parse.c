@@ -148,6 +148,10 @@ int post_para(int cmd, int length)
         LOG("randDataBuf:%s<br>\n", globalToken);
 
         //return
+        FCGI_printf("Status:200 OK\r\n");
+        FCGI_printf("Content-type: text/html;charset=utf-8\r\n"
+                    "\r\n");
+
         json_object *j_cfg = json_object_new_object();
         json_object *j_code = json_object_new_string("200");
         json_object_object_add(j_cfg, "code", j_code);
@@ -156,11 +160,7 @@ int post_para(int cmd, int length)
         json_object *j_data = json_object_new_string(globalToken);
         json_object_object_add(j_cfg, "data", j_data);
 
-        FCGI_printf("Status:200 OK\r\n");
-        FCGI_printf("Content-type: application/json;charset=utf-8\r\n"
-                    "\r\n"
-                    "%s",
-                    json_object_to_json_string(j_cfg));
+        FCGI_printf("%s", json_object_to_json_string(j_cfg));
         break;
     }
     case FILE_LIST:
@@ -599,12 +599,12 @@ int post_para(int cmd, int length)
         sscanf(bufReadP, "%s\r\n%*s", token);
         LOG("token:%s\n", token);
         LOG("globalToken:%s\n", globalToken);
-        // //verify token
-        // if (strcmp(token, globalToken))
-        // {
-        //     ret_json("500", "token无效");
-        //     break;
-        // }
+        //verify token
+        if (strcmp(token, globalToken))
+        {
+            ret_json("500", "token无效");
+            break;
+        }
 
         char path[] = "/dev/sda";
         if (dev_check())
@@ -616,6 +616,7 @@ int post_para(int cmd, int length)
         json_object *j_msg = json_object_new_string("ok");
 
         json_object *j_array = json_object_new_array();
+
         for (int i = 1; i < 100; i++)
         {
             char pathBuf[11];
@@ -642,6 +643,66 @@ int post_para(int cmd, int length)
                     "\r\n"
                     "%s",
                     json_object_to_json_string(j_cfg));
+        break;
+    }
+    case DISK_FORMAT:
+    {
+        char *dataBuf;
+        char *bufReadP;
+        char devName[64];
+        char devType[64];
+        int boundaryLen = 0;
+        bufReadP = postBuf;
+        //parse dev
+        dataBuf = strstr(postBuf, "name=");
+        boundaryLen = strlen(postBuf) - strlen(dataBuf);
+        LOG("boundaryLen:%d\n", boundaryLen);
+        bufReadP += boundaryLen;
+        sscanf(dataBuf, "name=\"%s%*s", devName);
+        if (strcmp(devName, "dev\""))
+        {
+            ret_json("500", "不符合规定的dev");
+            break;
+        }
+        bufReadP += strlen(devName) + 7 + strlen("\r\n");
+
+        dataBuf = bufReadP;
+        sscanf(dataBuf, "%s\r\n%*s", devName);
+        LOG("dev:%s\n", devName);
+
+        //parse type
+        bufReadP += boundaryLen + strlen(devName) + strlen("\r\n");
+
+        sscanf(bufReadP, " name=\"%s\"", devType);
+        if (strcmp(devType, "type\""))
+        {
+            ret_json("500", "不符合规定的type");
+            break;
+        }
+        bufReadP += strlen(devType) + 7 + strlen("\r\n");
+
+        sscanf(bufReadP, "%s\r\n%*s", devType);
+        LOG("type:%s\n", devType);
+
+        //get token
+        char token[32];
+        bufReadP += boundaryLen + strlen(devType) + 5 + strlen("\r\n");
+
+        sscanf(bufReadP, " name=\"%s\"", token);
+
+        bufReadP += strlen(token) + 7 + strlen("\n");
+
+        sscanf(bufReadP, "%s\r\n%*s", token);
+        LOG("token:%s\n", token);
+        LOG("globalToken:%s\n", globalToken);
+        // //verify token
+        // if (strcmp(token, globalToken))
+        // {
+        //     ret_json("500", "token无效");
+        //     break;
+        // }
+        ret_json("200", "ok");
+        disk_format(devName, devType);
         break;
     }
     default:
