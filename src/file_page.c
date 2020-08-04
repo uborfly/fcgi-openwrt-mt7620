@@ -34,13 +34,10 @@ static void ret_file_path(const char *path, const char *fileName, struct json_ob
     json_object_object_add(j_data, "create_time", json_object_new_string(ctime(&statBuf.st_ctime)));
     if (S_ISDIR(statBuf.st_mode)) //判断是否是目录
     {
-        // FCGI_printf("<a href=\"http://192.168.1.1:8082%s\">%s</a><br>", filePath, fileName);
-
         json_object_object_add(j_data, "size", json_object_new_string("dir"));
     }
     else if (S_ISREG(statBuf.st_mode))
     {
-        // FCGI_printf("<br /><a href=\"http://192.168.1.1:8082%s\">%s</a><br />", filePath, fileName);
         json_object_object_add(j_data, "size", json_object_new_string(tostring(statBuf.st_size)));
     }
 
@@ -65,6 +62,9 @@ int file_list_display(char *path)
 
     while ((dirInfo = readdir(dir)) != NULL)
     {
+        if (!strcmp(dirInfo->d_name, ".") || !strcmp(dirInfo->d_name, ".."))
+            continue;
+        // LOG("path:%s\nd_name:%s\n", path, dirInfo->d_name);
         ret_file_path(path, dirInfo->d_name, j_array);
     }
     json_object *j_cfg = json_object_new_object();
