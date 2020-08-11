@@ -5,7 +5,10 @@
 
 int file_list_display(char *path);
 void file_download(char *path);
-void file_upload(char *rootPath, int length, int nowReadLen, char *bufReadP, int bufLen);
+
+int file_upload_init(char *filePath, int cnt, int remain);
+int file_upload_data(int fileCnt, int dataLength, char *end, char *data, char *check);
+
 void file_create_dir(char *path);
 void file_delete(char *path);
 int disk_format(char *devName, char *devType);

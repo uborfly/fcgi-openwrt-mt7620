@@ -47,6 +47,10 @@ int parse_para(int num)
         {
             ret = FILE_UPLOAD;
         }
+        else if (!strcasecmp("file_transport", getParam[i]))
+        {
+            ret = FILE_TRANSPORT;
+        }
         else if (!strcasecmp("file_create_dir", getParam[i]))
         {
             ret = FILE_CREATE_DIR;

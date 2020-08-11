@@ -13,8 +13,7 @@
 #include "file_page.h"
 #include "gpio.h"
 #include "blkid/blkid.h"
-
-char globalToken[0x20];
+#include "multipart_parser.h"
 
 void fill_random(uint8_t *buf, size_t len)
 {
@@ -72,14 +71,225 @@ void test_sm3()
     LOG("\n");
 }
 
-#define bufLen 1024 * 60
+#define bufLen 1024 * 10
 #define ROOT "/mnt"
+
+typedef struct data_cmd
+{
+    char token[32];
+    char path[256];
+    char filename[64];
+    char cnt[8];
+    char remain[8];
+    char data[bufLen];
+    char end[8];
+    char check[8];
+    char length[8];
+    char username[32];
+    char passwd[32];
+    char devname[16];
+    char devtype[8];
+} data_cmd;
+
+typedef enum
+{
+    TOKEN,
+    PATH,
+    FILENAME,
+    CNT,
+    REMAIN,
+    DATA,
+    END,
+    CHECK,
+    LENGTH,
+    USERNAME,
+    PASSWD,
+    DEVNAME,
+    DEVTYPE
+} data_type;
+
+char globalToken[0x20];
+data_cmd g_data_cmd;
+data_type g_data_type;
+
+int read_header_value(multipart_parser *p, const char *at, size_t length)
+{
+    char buf[length];
+    strncpy(buf, at, length);
+    buf[length] = '\0';
+
+    if (!strcmp(buf, "form-data; name=\"token\""))
+    {
+        g_data_type = TOKEN;
+    }
+    else if (!strcmp(buf, "form-data; name=\"path\""))
+    {
+        g_data_type = PATH;
+    }
+    else if (!strcmp(buf, "form-data; name=\"filename\""))
+    {
+        g_data_type = FILENAME;
+    }
+    else if (!strcmp(buf, "form-data; name=\"cnt\""))
+    {
+        g_data_type = CNT;
+    }
+    else if (!strcmp(buf, "form-data; name=\"remain\""))
+    {
+        g_data_type = REMAIN;
+    }
+    else if (!strcmp(buf, "form-data; name=\"data\""))
+    {
+        g_data_type = DATA;
+    }
+    else if (!strcmp(buf, "form-data; name=\"end\""))
+    {
+        g_data_type = END;
+    }
+    else if (!strcmp(buf, "form-data; name=\"check\""))
+    {
+        g_data_type = CHECK;
+    }
+    else if (!strcmp(buf, "form-data; name=\"length\""))
+    {
+        g_data_type = LENGTH;
+    }
+    else if (!strcmp(buf, "form-data; name=\"username\""))
+    {
+        g_data_type = USERNAME;
+    }
+    else if (!strcmp(buf, "form-data; name=\"passwd\""))
+    {
+        g_data_type = PASSWD;
+    }
+    else if (!strcmp(buf, "form-data; name=\"dev\""))
+    {
+        g_data_type = DEVNAME;
+    }
+    else if (!strcmp(buf, "form-data; name=\"type\""))
+    {
+        g_data_type = DEVTYPE;
+    }
+    else
+    {
+        ret_json("500", "unknown cmd");
+    }
+    // LOG("%s\n", buf);
+    return 0;
+}
+
+int read_header_data(multipart_parser *p, const char *at, size_t length)
+{
+    switch (g_data_type)
+    {
+    case TOKEN:
+    {
+        strncpy(g_data_cmd.token, at, length);
+        g_data_cmd.token[length] = '\0';
+        // LOG("case token %s\n", g_data_cmd.token);
+        break;
+    }
+    case PATH:
+    {
+        strncpy(g_data_cmd.path, at, length);
+        g_data_cmd.path[length] = '\0';
+        // LOG("%s\n", g_data_cmd.path);
+        break;
+    }
+    case FILENAME:
+    {
+        strncpy(g_data_cmd.filename, at, length);
+        g_data_cmd.filename[length] = '\0';
+        // LOG("%s\n", g_data_cmd.filename);
+        break;
+    }
+    case CNT:
+    {
+        strncpy(g_data_cmd.cnt, at, length);
+        g_data_cmd.cnt[length] = '\0';
+        // LOG("%s\n", g_data_cmd.cnt);
+        break;
+    }
+    case REMAIN:
+    {
+        strncpy(g_data_cmd.remain, at, length);
+        g_data_cmd.remain[length] = '\0';
+        // LOG("%s\n", g_data_cmd.remain);
+        break;
+    }
+    case DATA:
+    {
+        strncpy(g_data_cmd.data, at, length);
+        g_data_cmd.data[length] = '\0';
+        // LOG("%s\n", g_data_cmd.data);
+        break;
+    }
+    case END:
+    {
+        strncpy(g_data_cmd.end, at, length);
+        g_data_cmd.end[length] = '\0';
+        // LOG("%s\n", g_data_cmd.end);
+        break;
+    }
+    case CHECK:
+    {
+        strncpy(g_data_cmd.check, at, length);
+        g_data_cmd.check[length] = '\0';
+        // LOG("%s\n", g_data_cmd.check);
+        break;
+    }
+    case LENGTH:
+    {
+        strncpy(g_data_cmd.length, at, length);
+        g_data_cmd.length[length] = '\0';
+        // LOG("%s\n", g_data_cmd.length);
+        break;
+    }
+    case USERNAME:
+    {
+        strncpy(g_data_cmd.username, at, length);
+        g_data_cmd.username[length] = '\0';
+        break;
+    }
+    case PASSWD:
+    {
+        strncpy(g_data_cmd.passwd, at, length);
+        g_data_cmd.passwd[length] = '\0';
+        break;
+    }
+    case DEVNAME:
+    {
+        strncpy(g_data_cmd.devname, at, length);
+        g_data_cmd.devname[length] = '\0';
+        break;
+    }
+    case DEVTYPE:
+    {
+        strncpy(g_data_cmd.devtype, at, length);
+        g_data_cmd.devtype[length] = '\0';
+        break;
+    }
+    default:
+    {
+        LOG("unknown type\n");
+        ret_json("500", "unknown type");
+        break;
+    }
+    }
+    return 0;
+}
+
 int post_para(int cmd, int length)
 {
+    multipart_parser_settings callbacks;
+
+    memset(&callbacks, 0, sizeof(multipart_parser_settings));
+    callbacks.on_header_value = read_header_value;
+    callbacks.on_part_data = read_header_data;
+
     int nowReadLen = 0;
 
-    LOG("<pre>");
-    LOG("cmd:%d\tlength:%d<br>", cmd, length);
+    LOG("cmd:%d\tlength:%d\n", cmd, length);
 
     if (length < bufLen)
         nowReadLen = length;
@@ -90,53 +300,32 @@ int post_para(int cmd, int length)
     FCGI_fread(postBuf, sizeof(char), nowReadLen, stdin);
 
     postBuf[nowReadLen] = '\0';
-    LOG("%s", postBuf);
+
+    char *bufReadP;
+    int boundaryLen = 0;
+    bufReadP = strstr(postBuf, "\r\n");
+    boundaryLen = strlen(postBuf) - strlen(bufReadP);
+    char boundary[boundaryLen];
+    strncpy(boundary, postBuf, boundaryLen);
+    boundary[boundaryLen] = '\0';
+    LOG("boundary:%d\n%s\n", boundaryLen, boundary);
+
+    multipart_parser *parser = multipart_parser_init(boundary, &callbacks);
+    multipart_parser_execute(parser, postBuf, nowReadLen);
+    LOG("multipart_parser_execute\n");
+    multipart_parser_free(parser);
 
     switch (cmd)
     {
     case INVALID:
         ret_json("500", "无效的cmd");
-        LOG("CMD INVALID<br>");
+        LOG("CMD INVALID\n");
         break;
     case LOGIN:
     {
-        char *dataBuf;
-        char *bufReadP;
-        char userName[64];
-        char passwd[64];
-        int boundaryLen = 0;
-        bufReadP = postBuf;
-        //parse username
-        dataBuf = strstr(postBuf, "name=");
-        boundaryLen = strlen(postBuf) - strlen(dataBuf);
-        LOG("boundaryLen:%d<br>", boundaryLen);
-        bufReadP += boundaryLen;
-        sscanf(dataBuf, "name=\"%s%*s", userName);
-        if (strcmp(userName, "username\""))
-        {
-            ret_json("500", "不符合规定的username");
-            break;
-        }
-        bufReadP += strlen(userName) + 7 + strlen("\r\n");
-
-        dataBuf = bufReadP;
-        sscanf(dataBuf, "%s\r\n%*s", userName);
-        LOG("username:%s<br>", userName);
-
-        //parse passwd
-        bufReadP += boundaryLen + strlen(userName) + strlen("\r\n");
-
-        sscanf(bufReadP, " name=\"%s\"", passwd);
-        if (strcmp(passwd, "passwd\""))
-        {
-            ret_json("500", "不符合规定的passwd");
-            break;
-        }
-        bufReadP += strlen(passwd) + 7 + strlen("\r\n");
-
-        sscanf(bufReadP, "%s\r\n%*s", passwd);
-        LOG("passwd:%s<br>", passwd);
-        if (strcmp(userName, "admin") || strcmp(passwd, "123456"))
+        LOG("username:%s\n", g_data_cmd.username);
+        LOG("passwd:%s\n", g_data_cmd.passwd);
+        if (strcmp(g_data_cmd.username, "admin") || strcmp(g_data_cmd.passwd, "123456"))
         {
             ret_json("500", "错误的用户名或密码");
             break;
@@ -145,7 +334,7 @@ int post_para(int cmd, int length)
         uint8_t randBuf[0x10];
         fill_random(randBuf, 0x10);
         byteToHex(globalToken, randBuf, 0x10);
-        LOG("randDataBuf:%s<br>\n", globalToken);
+        LOG("randDataBuf:%s\n", globalToken);
 
         //return
         FCGI_printf("Status:200 OK\r\n");
@@ -165,41 +354,10 @@ int post_para(int cmd, int length)
     }
     case FILE_LIST:
     {
-        //get path
-        char *dataBuf;
-        char *bufReadP;
-        char path[32];
-        int boundaryLen = 0;
-        bufReadP = postBuf;
-
-        dataBuf = strstr(postBuf, "name=");
-        boundaryLen = strlen(postBuf) - strlen(dataBuf);
-        LOG("boundaryLen:%d<br>", boundaryLen);
-        bufReadP += boundaryLen;
-        sscanf(dataBuf, "name=\"%s%*s", path);
-        if (strcmp(path, "path\""))
-        {
-            ret_json("500", "不符合规定的path");
-            break;
-        }
-        bufReadP += strlen(path) + 7 + strlen("\r\n");
-
-        dataBuf = bufReadP;
-        sscanf(dataBuf, "%s\r\n%*s", path);
-        LOG("path:%s<br>", path);
-        //get token
-        char token[32];
-        bufReadP += boundaryLen + strlen(path) + strlen("\r\n");
-
-        sscanf(bufReadP, " name=\"%s\"", token);
-
-        bufReadP += strlen(token) + 7 + strlen("\n");
-
-        sscanf(bufReadP, "%s\r\n%*s", token);
-        LOG("token:%s<br>", token);
-        LOG("globalToken:%s<br>", globalToken);
         //verify token
-        if (strcmp(token, globalToken))
+        LOG("token:%s\ng_token:%s\n",
+            g_data_cmd.token, globalToken);
+        if (strncmp(g_data_cmd.token, globalToken, 0x20))
         {
             ret_json("500", "token无效");
             break;
@@ -210,170 +368,69 @@ int post_para(int cmd, int length)
             ret_json("500", "设备未挂载");
             break;
         }
+        LOG("path:%s\n", g_data_cmd.path);
         char rootPath[] = ROOT;
-        strcat(rootPath, path);
+        strcat(rootPath, g_data_cmd.path);
         file_list_display(rootPath);
         break;
     }
     case FILE_DOWNLOAD:
     {
-        //get path
-        char *dataBuf;
-        char *bufReadP;
-        char path[32];
-        int boundaryLen = 0;
-        bufReadP = postBuf;
-
-        dataBuf = strstr(postBuf, "name=");
-        boundaryLen = strlen(postBuf) - strlen(dataBuf);
-        LOG("boundaryLen:%d<br>", boundaryLen);
-        bufReadP += boundaryLen;
-        sscanf(dataBuf, "name=\"%s%*s", path);
-        if (strcmp(path, "path\""))
+        //verify token
+        LOG("token:%s\ng_token:%s\n",
+            g_data_cmd.token, globalToken);
+        if (strncmp(g_data_cmd.token, globalToken, 0x20))
         {
-            ret_json("500", "不符合规定的path");
+            ret_json("500", "token无效");
             break;
         }
-        bufReadP += strlen(path) + 7 + strlen("\r\n");
-
-        dataBuf = bufReadP;
-        sscanf(dataBuf, "%s\r\n%*s", path);
-        LOG("path:%s<br>", path);
-        //get token
-        char token[32];
-        bufReadP += boundaryLen + strlen(path) + strlen("\r\n");
-
-        sscanf(bufReadP, " name=\"%s\"", token);
-
-        bufReadP += strlen(token) + 7 + strlen("\n");
-
-        sscanf(bufReadP, "%s\r\n%*s", token);
-        LOG("token:%s<br>", token);
-        LOG("globalToken:%s<br>", globalToken);
-        // //verify token
-        // if (strcmp(token, globalToken))
-        // {
-        //     ret_json("500", "token无效");
-        //     break;
-        // }
-        // //check mount
-        // if (dev_check())
-        // {
-        //     ret_json("500", "设备未挂载");
-        //     break;
-        // }
         char rootPath[] = ROOT;
-        strcat(rootPath, path);
+        strcat(rootPath, g_data_cmd.path);
         file_download(rootPath);
         break;
     }
     case FILE_UPLOAD:
-    { /*
-        //get path
-        char *dataBuf;
-        char *bufReadP;
-        char path[64];
-        int boundaryLen = 0;
-        bufReadP = postBuf;
-        dataBuf = strstr(postBuf, "name=");
-        boundaryLen = strlen(postBuf) - strlen(dataBuf);
-
-        LOG("boundaryLen:%d<br>", boundaryLen);
-        bufReadP += boundaryLen;
-        sscanf(dataBuf, "name=\"%s%*s", path);
-        if (strcmp(path, "path\""))
+    {
+        //verify token
+        LOG("token:%s\ng_token:%s\n",
+            g_data_cmd.token, globalToken);
+        if (strncmp(g_data_cmd.token, globalToken, 0x20))
         {
-            ret_json("500", "不符合规定的path");
+            ret_json("500", "token无效");
             break;
         }
-        bufReadP += strlen(path) + 7 + strlen("\r\n");
+        char path[256 + 64] = "/mnt";
 
-        dataBuf = bufReadP;
-        sscanf(dataBuf, "%s\r\n%*s", path);
-        LOG("path:%s<br>", path);
-        //get token
-        char token[32];
-        bufReadP += boundaryLen + strlen(path) + strlen("\r\n");
-
-        sscanf(bufReadP, " name=\"%s\"", token);
-
-        bufReadP += strlen(token) + 7 + strlen("\n");
-
-        sscanf(bufReadP, "%s\r\n%*s", token);
-
-        // LOG("token:%s<br>", token);
-        // LOG("globalToken:%s<br>", globalToken);
-        // // verify token
-        // if (strcmp(token, globalToken))
-        // {
-        //     ret_json("500", "token无效");
-        //     break;
-        // }
-        // //check mount
-        // if (dev_check())
-        // {
-        //     ret_json("500", "设备未挂载");
-        //     break;
-        // }
-
-        //get filename
-        bufReadP = postBuf;
-        dataBuf = strstr(postBuf, "filename=");
-        int filePos = strlen(postBuf) - strlen(dataBuf);
-
-        char fileName[64];
-        // LOG("dataBuf:%s\n", dataBuf);
-
-        sscanf(dataBuf, "filename=\"%s\"", fileName);
-        fileName[strlen(fileName) - 1] = '\0';
-        // LOG("fileName:%s\n", fileName);
-
-        bufReadP += filePos + strlen(fileName) + strlen("filename=") + 2 + strlen("\r\n");
-        // LOG("bufReadP:%s\n", bufReadP);
-
-        dataBuf = strstr(bufReadP, "\r\n\r\n");
-        // LOG("dataBuf:%s\n", dataBuf);
-        bufReadP += strlen(bufReadP) - strlen(dataBuf) + strlen("\r\n\r\n");
-        // LOG("bufReadP:%s\n", bufReadP);
-
-        char rootPath[128] = ROOT;
-        strcat(rootPath, path);
-        printf("rootPath:%s  %s\n", rootPath, path);
-
-        //check upper dir exist
-        char *retDirName = strrchr(rootPath, '/');
-        printf("dest dir:%s\n", retDirName);
-        char upperDir[strlen(rootPath) - strlen(retDirName)];
-        strncpy(upperDir, rootPath, strlen(rootPath) - strlen(retDirName));
-        upperDir[strlen(rootPath) - strlen(retDirName)] = '\0';
-        printf("upperDir dir:%s\n", upperDir);
-        printf("path:%s\n", rootPath);
-        struct stat statBuf;
-        if (access(upperDir, F_OK))
+        LOG("path:%s\nfilename:%s\ncnt:%s\nremain:%s\n",
+            g_data_cmd.path, g_data_cmd.filename, g_data_cmd.cnt, g_data_cmd.remain);
+        //path
+        strcat(path, g_data_cmd.path);
+        strcat(path, g_data_cmd.filename);
+        LOG("path:%s\n", path);
+        if (!file_upload_init(path,
+                              tonumber(g_data_cmd.cnt, strlen(g_data_cmd.cnt)),
+                              tonumber(g_data_cmd.remain, strlen(g_data_cmd.remain))))
+            ret_json("200", "ok");
+        break;
+    }
+    case FILE_TRANSPORT:
+    {
+        LOG("token:%s\ng_token:%s\n",
+            g_data_cmd.token, globalToken);
+        //verify token
+        if (strncmp(g_data_cmd.token, globalToken, 0x20))
         {
-            ret_json("500", "上级目录不存在");
+            ret_json("500", "token无效");
             break;
         }
 
-        //check dir exist
+        LOG("cnt:%s\nlength:%s\ndata:%s\nend:%s\ncheck:%s\n",
+            g_data_cmd.cnt, g_data_cmd.length, g_data_cmd.data, g_data_cmd.end, g_data_cmd.check);
 
-        printf("目录存在，判断是否为文件夹\n");
-        //is it dir
-        stat(rootPath, &statBuf);
-        if (!S_ISDIR(statBuf.st_mode)) //判断是否是目录
-        {
-            ret_json("500", "上级目录不存在,有同名文件");
-            break;
-        }
-
-        strcat(rootPath, fileName);
-        LOG("filePath:%s\n", rootPath);
-
-        nowReadLen -= strlen(postBuf) - strlen(bufReadP);
-        LOG("nowReadLen:%d\n", nowReadLen);
-
-        file_upload(rootPath, length, nowReadLen, bufReadP, bufLen);
-*/
+        if (!file_upload_data(tonumber(g_data_cmd.cnt, strlen(g_data_cmd.cnt)),
+                              tonumber(g_data_cmd.length, strlen(g_data_cmd.length)),
+                              g_data_cmd.end, g_data_cmd.data, g_data_cmd.check))
+            ret_json("200", "ok");
         break;
     }
     case FILE_CREATE_DIR:
@@ -387,7 +444,7 @@ int post_para(int cmd, int length)
 
         dataBuf = strstr(postBuf, "name=");
         boundaryLen = strlen(postBuf) - strlen(dataBuf);
-        LOG("boundaryLen:%d<br>", boundaryLen);
+        LOG("boundaryLen:%d\n", boundaryLen);
         bufReadP += boundaryLen;
         sscanf(dataBuf, "name=\"%s%*s", path);
         if (strcmp(path, "path\""))
@@ -399,7 +456,7 @@ int post_para(int cmd, int length)
 
         dataBuf = bufReadP;
         sscanf(dataBuf, "%s\r\n%*s", path);
-        LOG("path:%s<br>", path);
+        LOG("path:%s\n", path);
         //get token
         char token[32];
         bufReadP += boundaryLen + strlen(path) + strlen("\r\n");
@@ -409,8 +466,8 @@ int post_para(int cmd, int length)
         bufReadP += strlen(token) + 7 + strlen("\n");
 
         sscanf(bufReadP, "%s\r\n%*s", token);
-        LOG("token:%s<br>", token);
-        LOG("globalToken:%s<br>", globalToken);
+        LOG("token:%s\n", token);
+        LOG("globalToken:%s\n", globalToken);
         //verify token
         if (strcmp(token, globalToken))
         {
@@ -439,7 +496,7 @@ int post_para(int cmd, int length)
 
         dataBuf = strstr(postBuf, "name=");
         boundaryLen = strlen(postBuf) - strlen(dataBuf);
-        LOG("boundaryLen:%d<br>", boundaryLen);
+        LOG("boundaryLen:%d\n", boundaryLen);
         bufReadP += boundaryLen;
         sscanf(dataBuf, "name=\"%s%*s", path);
         if (strcmp(path, "path\""))
@@ -451,7 +508,7 @@ int post_para(int cmd, int length)
 
         dataBuf = bufReadP;
         sscanf(dataBuf, "%s\r\n%*s", path);
-        LOG("path:%s<br>", path);
+        LOG("path:%s\n", path);
         //get token
         char token[32];
         bufReadP += boundaryLen + strlen(path) + strlen("\r\n");
@@ -461,8 +518,8 @@ int post_para(int cmd, int length)
         bufReadP += strlen(token) + 7 + strlen("\n");
 
         sscanf(bufReadP, "%s\r\n%*s", token);
-        LOG("token:%s<br>", token);
-        LOG("globalToken:%s<br>", globalToken);
+        LOG("token:%s\n", token);
+        LOG("globalToken:%s\n", globalToken);
         //verify token
         if (strcmp(token, globalToken))
         {
@@ -553,7 +610,7 @@ int post_para(int cmd, int length)
 
         dataBuf = strstr(postBuf, "name=");
         boundaryLen = strlen(postBuf) - strlen(dataBuf);
-        LOG("boundaryLen:%d<br>", boundaryLen);
+        LOG("boundaryLen:%d\n", boundaryLen);
         bufReadP += boundaryLen;
         sscanf(dataBuf, "name=\"%s%*s", path);
         if (strcmp(path, "path\""))
@@ -565,7 +622,7 @@ int post_para(int cmd, int length)
 
         dataBuf = bufReadP;
         sscanf(dataBuf, "%s\r\n%*s", path);
-        LOG("states:%d<br>", atoi(path));
+        LOG("states:%d\n", atoi(path));
 
         gpio_export(1);
         gpio_direction(1, 1);
@@ -576,36 +633,16 @@ int post_para(int cmd, int length)
     }
     case DEV_LIST:
     {
-        char *dataBuf;
-        char *bufReadP;
-        char token[32];
-        int boundaryLen = 0;
-        bufReadP = postBuf;
-
-        dataBuf = strstr(postBuf, "name=");
-        boundaryLen = strlen(postBuf) - strlen(dataBuf);
-        LOG("boundaryLen:%d\n", boundaryLen);
-        bufReadP += boundaryLen;
-        sscanf(dataBuf, "name=\"%s%*s", token);
-        LOG("token:%s\n", token);
-        if (strcmp(token, "token\""))
-        {
-            ret_json("500", "不符合规定的token");
-            break;
-        }
-        bufReadP += strlen(token) + 7 + strlen("\r\n");
-
-        dataBuf = bufReadP;
-        sscanf(bufReadP, "%s\r\n%*s", token);
-        LOG("token:%s\n", token);
-        LOG("globalToken:%s\n", globalToken);
         //verify token
-        if (strcmp(token, globalToken))
+        LOG("token:%s\ng_token:%s\n",
+            g_data_cmd.token, globalToken);
+        if (strncmp(g_data_cmd.token, globalToken, 0x20))
         {
             ret_json("500", "token无效");
             break;
         }
 
+        //check mount
         char path[] = "/dev/sda";
         if (dev_check())
         {
@@ -647,68 +684,21 @@ int post_para(int cmd, int length)
     }
     case DISK_FORMAT:
     {
-        char *dataBuf;
-        char *bufReadP;
-        char devName[64];
-        char devType[64];
-        int boundaryLen = 0;
-        bufReadP = postBuf;
-        //parse dev
-        dataBuf = strstr(postBuf, "name=");
-        boundaryLen = strlen(postBuf) - strlen(dataBuf);
-        LOG("boundaryLen:%d\n", boundaryLen);
-        bufReadP += boundaryLen;
-        sscanf(dataBuf, "name=\"%s%*s", devName);
-        if (strcmp(devName, "dev\""))
+        //verify token
+        LOG("token:%s\ng_token:%s\n",
+            g_data_cmd.token, globalToken);
+        if (strncmp(g_data_cmd.token, globalToken, 0x20))
         {
-            ret_json("500", "不符合规定的dev");
+            ret_json("500", "token无效");
             break;
         }
-        bufReadP += strlen(devName) + 7 + strlen("\r\n");
-
-        dataBuf = bufReadP;
-        sscanf(dataBuf, "%s\r\n%*s", devName);
-        LOG("dev:%s\n", devName);
-
-        //parse type
-        bufReadP += boundaryLen + strlen(devName) + strlen("\r\n");
-
-        sscanf(bufReadP, " name=\"%s\"", devType);
-        if (strcmp(devType, "type\""))
-        {
-            ret_json("500", "不符合规定的type");
-            break;
-        }
-        bufReadP += strlen(devType) + 7 + strlen("\r\n");
-
-        sscanf(bufReadP, "%s\r\n%*s", devType);
-        LOG("type:%s\n", devType);
-
-        //get token
-        char token[32];
-        bufReadP += boundaryLen + strlen(devType) + 5 + strlen("\r\n");
-
-        sscanf(bufReadP, " name=\"%s\"", token);
-
-        bufReadP += strlen(token) + 7 + strlen("\n");
-
-        sscanf(bufReadP, "%s\r\n%*s", token);
-        LOG("token:%s\n", token);
-        LOG("globalToken:%s\n", globalToken);
-        // //verify token
-        // if (strcmp(token, globalToken))
-        // {
-        //     ret_json("500", "token无效");
-        //     break;
-        // }
+        //check mount
         ret_json("200", "ok");
-        disk_format(devName, devType);
+        disk_format(g_data_cmd.devname, g_data_cmd.devtype);
         break;
     }
     default:
         break;
     }
-
-    LOG("</pre>");
     return 0;
 }

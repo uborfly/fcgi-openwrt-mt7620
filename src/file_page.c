@@ -7,6 +7,11 @@
 #include "utils.h"
 #include "libudev.h"
 #include "json-c/json.h"
+
+int gRecvFileCnt = 0;
+int gRecvFileRemain = 0;
+FILE *g_fp = NULL;
+
 static void get_file_path(const char *path, const char *filename, char *filepath)
 {
     strcpy(filepath, path);
@@ -115,55 +120,52 @@ void file_download(char *path)
     fclose(fp);
 }
 
-void file_upload(char *rootPath, int length, int nowReadLen, char *bufReadP, int bufLen)
+int file_upload_init(char *path, int cnt, int remain)
 {
+    struct stat statBuf;
+    //is it dir
+    stat(path, &statBuf);
+    if (S_ISDIR(statBuf.st_mode)) //判断是否是目录
+    {
+        ret_json("500", "文件不存在,有同名文件夹");
+        return 1;
+    }
+    gRecvFileCnt = cnt;
+    gRecvFileRemain = remain;
+    LOG("\path:%s\ncnt:%d\nremain:%d\n", path, cnt, remain);
     //create file
-    FILE *fp = fopen(rootPath, "wb+");
-    if (NULL == fp)
+    g_fp = fopen(path, "wb+");
+    if (NULL == g_fp)
     {
-        LOG("file open err\n");
-        return;
+        ret_json("500", "file open err");
+        return 1;
     }
-    length -= nowReadLen;
-    while (nowReadLen > 0)
+    return 0;
+}
+
+int file_upload_data(int fileCnt, int dataLength, char *end, char *data, char *check)
+{
+    if (fileCnt > gRecvFileCnt)
     {
-        fputc(*bufReadP, fp);
-        bufReadP++;
-        nowReadLen--;
+        ret_json("500", "传输错误");
+        return 1;
     }
-
-    while (length > 0)
+    if (!strcmp(end, "true") && strcmp(check, "null"))
     {
-        if (length < bufLen)
-            nowReadLen = length;
-        else
-            nowReadLen = bufLen;
-        char postBuf[nowReadLen];
-        // LOG("%d\t%d\n", length, nowReadLen);
-        FCGI_fread(postBuf, sizeof(char), nowReadLen, stdin);
-        length -= nowReadLen;
-        postBuf[nowReadLen] = '\0';
-
-        char *bufP = postBuf;
-        while (nowReadLen > 0)
+        //校验
         {
-            if (!strncmp(bufP, "\r\n--------", 10))
-            {
-                // LOG("-----\n");
-                // LOG("nowReadLen:%d\n", nowReadLen);
-                length = 0;
-                break;
-            }
-
-            fputc(*bufP, fp);
-            bufP++;
-            nowReadLen--;
+            fwrite(data, dataLength, 1, g_fp);
+            fclose(g_fp);
+            return 0;
         }
     }
-    fclose(fp);
-
-    //return
-    ret_json("200", "ok");
+    if (strlen(data) != dataLength)
+    {
+        ret_json("500", "数据缺失");
+        return 1;
+    }
+    fwrite(data, dataLength, 1, g_fp);
+    return 0;
 }
 
 void file_create_dir(char *path)

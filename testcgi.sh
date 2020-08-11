@@ -1,4 +1,5 @@
 #!/bin/bash
+clear
 make clean
 make
 cp build/bin/upload /mnt/e/vmbox_share/
