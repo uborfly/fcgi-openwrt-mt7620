@@ -71,7 +71,7 @@ void test_sm3()
     LOG("\n");
 }
 
-#define bufLen 1024 * 10
+#define bufLen (2 * 1024)
 #define ROOT "/mnt"
 
 typedef struct data_cmd
@@ -423,13 +423,27 @@ int post_para(int cmd, int length)
             ret_json("500", "token无效");
             break;
         }
+        int dataLength = tonumber(g_data_cmd.length, strlen(g_data_cmd.length));
+        char dataBuf[dataLength];
+        // strcpy(dataBuf, g_data_cmd.data);
+        // dataBuf[bufLen] = '\0';
 
         LOG("cnt:%s\nlength:%s\ndata:%s\nend:%s\ncheck:%s\n",
             g_data_cmd.cnt, g_data_cmd.length, g_data_cmd.data, g_data_cmd.end, g_data_cmd.check);
 
+        for (size_t i = 0; i < dataLength; i++)
+        {
+            if (!checkIsHex(g_data_cmd.data[i * 2]) || !checkIsHex(g_data_cmd.data[i * 2 + 1]))
+            {
+                // ret_json("501", tostring(dataLength));
+                break;
+            }
+            dataBuf[i] = hexToByte(&g_data_cmd.data[i * 2]);
+        }
+
         if (!file_upload_data(tonumber(g_data_cmd.cnt, strlen(g_data_cmd.cnt)),
                               tonumber(g_data_cmd.length, strlen(g_data_cmd.length)),
-                              g_data_cmd.end, g_data_cmd.data, g_data_cmd.check))
+                              g_data_cmd.end, dataBuf, g_data_cmd.check))
             ret_json("200", "ok");
         break;
     }

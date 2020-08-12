@@ -134,7 +134,7 @@ int file_upload_init(char *path, int cnt, int remain)
     gRecvFileRemain = remain;
     LOG("\path:%s\ncnt:%d\nremain:%d\n", path, cnt, remain);
     //create file
-    g_fp = fopen(path, "wb+");
+    g_fp = fopen(path, "wb");
     if (NULL == g_fp)
     {
         ret_json("500", "file open err");
@@ -153,17 +153,17 @@ int file_upload_data(int fileCnt, int dataLength, char *end, char *data, char *c
     if (!strcmp(end, "true") && strcmp(check, "null"))
     {
         //校验
-        {
-            fwrite(data, dataLength, 1, g_fp);
-            fclose(g_fp);
-            return 0;
-        }
-    }
-    if (strlen(data) != dataLength)
-    {
-        ret_json("500", "数据缺失");
+
+        fwrite(data, dataLength, 1, g_fp);
+        fclose(g_fp);
+        ret_json("200", tostring(dataLength));
         return 1;
     }
+    // if (strlen(data) != dataLength)
+    // {
+    //     ret_json("500", "数据缺失");
+    //     return 1;
+    // }
     fwrite(data, dataLength, 1, g_fp);
     return 0;
 }

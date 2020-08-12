@@ -161,7 +161,7 @@ uint8_t checkIsHex(unsigned char x)
     return 0;
 }
 
-#define BURSIZE 2048
+#define BUFSIZE 2048
 
 int hex2dec(char c)
 {
@@ -205,7 +205,7 @@ void urlencode(char url[])
     int i = 0;
     int len = strlen(url);
     int res_len = 0;
-    char res[BURSIZE];
+    char res[BUFSIZE];
     for (i = 0; i < len; ++i)
     {
         char c = url[i];
@@ -239,7 +239,7 @@ void urldecode(char url[])
     int i = 0;
     int len = strlen(url);
     int res_len = 0;
-    char res[BURSIZE];
+    char res[BUFSIZE];
     for (i = 0; i < len; ++i)
     {
         char c = url[i];
