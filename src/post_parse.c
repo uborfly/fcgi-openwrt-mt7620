@@ -71,7 +71,7 @@ void test_sm3()
     LOG("\n");
 }
 
-#define bufLen (2 * 1024)
+#define bufLen (1024 * 1)
 #define ROOT "/mnt"
 
 typedef struct data_cmd
@@ -81,7 +81,7 @@ typedef struct data_cmd
     char filename[64];
     char cnt[8];
     char remain[8];
-    char data[bufLen];
+    char data[bufLen * 2];
     char end[8];
     char check[8];
     char length[8];
@@ -287,19 +287,17 @@ int post_para(int cmd, int length)
     callbacks.on_header_value = read_header_value;
     callbacks.on_part_data = read_header_data;
 
-    int nowReadLen = 0;
-
     LOG("cmd:%d\tlength:%d\n", cmd, length);
 
-    if (length < bufLen)
-        nowReadLen = length;
-    else
-        nowReadLen = bufLen;
-    char postBuf[nowReadLen];
+    // if (length < bufLen)
+    //     nowReadLen = length;
+    // else
+    //     nowReadLen = bufLen;
+    char postBuf[length];
 
-    FCGI_fread(postBuf, sizeof(char), nowReadLen, stdin);
+    FCGI_fread(postBuf, sizeof(char), length, stdin);
 
-    postBuf[nowReadLen] = '\0';
+    postBuf[length] = '\0';
 
     char *bufReadP;
     int boundaryLen = 0;
@@ -311,7 +309,7 @@ int post_para(int cmd, int length)
     LOG("boundary:%d\n%s\n", boundaryLen, boundary);
 
     multipart_parser *parser = multipart_parser_init(boundary, &callbacks);
-    multipart_parser_execute(parser, postBuf, nowReadLen);
+    multipart_parser_execute(parser, postBuf, length);
     LOG("multipart_parser_execute\n");
     multipart_parser_free(parser);
 
@@ -431,19 +429,24 @@ int post_para(int cmd, int length)
         LOG("cnt:%s\nlength:%s\ndata:%s\nend:%s\ncheck:%s\n",
             g_data_cmd.cnt, g_data_cmd.length, g_data_cmd.data, g_data_cmd.end, g_data_cmd.check);
 
+        char writeBuf[bufLen * 2];
+        strcpy(writeBuf, g_data_cmd.data);
+        writeBuf[bufLen * 2] = '\0';
         for (size_t i = 0; i < dataLength; i++)
         {
-            if (!checkIsHex(g_data_cmd.data[i * 2]) || !checkIsHex(g_data_cmd.data[i * 2 + 1]))
+            if (!checkIsHex(writeBuf[i * 2]) || !checkIsHex(writeBuf[i * 2 + 1]))
             {
                 // ret_json("501", tostring(dataLength));
                 break;
             }
-            dataBuf[i] = hexToByte(&g_data_cmd.data[i * 2]);
+            dataBuf[i] = hexToByte(&writeBuf[i * 2]);
         }
 
         if (!file_upload_data(tonumber(g_data_cmd.cnt, strlen(g_data_cmd.cnt)),
-                              tonumber(g_data_cmd.length, strlen(g_data_cmd.length)),
-                              g_data_cmd.end, dataBuf, g_data_cmd.check))
+                              dataLength,
+                              g_data_cmd.end,
+                              dataBuf,
+                              g_data_cmd.check))
             ret_json("200", "ok");
         break;
     }
