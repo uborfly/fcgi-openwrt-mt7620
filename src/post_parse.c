@@ -71,7 +71,7 @@ void test_sm3()
     LOG("\n");
 }
 
-#define bufLen (1024 * 1)
+#define bufLen (1024 * 10)
 #define ROOT "/mnt"
 
 typedef struct data_cmd
