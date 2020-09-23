@@ -1,3 +1,11 @@
+/*
+ * @Author       : Kexiang Zhang
+ * @Date         : 2020-09-23 15:10:06
+ * @LastEditors  : Kexiang Zhang
+ * @LastEditTime : 2020-09-23 15:23:22
+ * @FilePath     : /fcgi-openwrt-mt7620/src/utils.c
+ * @Description  : 各类转换工具
+ */
 #include "utils.h"
 #include <math.h>
 #include <assert.h>
@@ -5,8 +13,14 @@
 #include <string.h>
 #include "json-c/json.h"
 
-#define BYTES_PER_LINE 16
+#define BYTES_PER_LINE 16 //hex打印时的单行字符数量
 
+/**
+ * @description:json返回
+ * @param {code 错误码}
+ * @param {message 错误信息}
+ * @return {none}
+ */
 void ret_json(char *code, char *message)
 {
     json_object *j_cfg = json_object_new_object();
@@ -22,6 +36,12 @@ void ret_json(char *code, char *message)
                 json_object_to_json_string(j_cfg));
 }
 
+/**
+ * @description:打印hex buffer
+ * @param {buffer 打印数据}
+ * @param {buff_len 数据长度}
+ * @return {none}
+ */
 void log_buffer_hex(const void *buffer, uint16_t buff_len)
 {
     if (buff_len == 0)
@@ -55,6 +75,12 @@ void log_buffer_hex(const void *buffer, uint16_t buff_len)
     } while (buff_len);
 }
 
+/**
+ * @description:字符串转整型
+ * @param {data 字符串}
+ * @param {data_len 字符串长度}
+ * @return {目标整型数}
+ */
 uint32_t tonumber(uint8_t *data, uint8_t data_len)
 {
     uint32_t num = 0;
@@ -66,6 +92,11 @@ uint32_t tonumber(uint8_t *data, uint8_t data_len)
     return num;
 }
 
+/**
+ * @description:整型转字符串
+ * @param {num 整型数}
+ * @return {目标字符串}
+ */
 char *tostring(long num)
 {
     static char str[20];
@@ -108,7 +139,13 @@ static unsigned char bToH(uint8_t x)
     }
 }
 
-//16进制转字符串
+/**
+ * @description:hex转字符串
+ * @param {out 目标字符串}
+ * @param {src 源字符串}
+ * @param {len 源字符串长度}
+ * @return {none}
+ */
 unsigned char byteToHex(char *out, uint8_t *src, uint8_t len)
 {
     int i;
@@ -138,12 +175,21 @@ static unsigned char hToB(unsigned char x)
     return 0;
 }
 
-//字符转16进制
+/**
+ * @description: 字符转hex
+ * @param {s 源字符}
+ * @return {目标字符}
+ */
 unsigned char hexToByte(unsigned char *s)
 {
     return (hToB(s[0]) << 4) | (hToB(s[1]));
 }
 
+/**
+ * @description:字符转hex前的检查
+ * @param {x 源字符}
+ * @return {1 字符，0 不是字符应终止处理}
+ */
 uint8_t checkIsHex(unsigned char x)
 {
     if (x >= '0' && x <= '9')
@@ -161,8 +207,13 @@ uint8_t checkIsHex(unsigned char x)
     return 0;
 }
 
-#define BUFSIZE 2048
+#define BUFSIZE 2048 //url编解码buff长度
 
+/**
+ * @description: ASCII码字符转整型
+ * @param {c ASCII码字符}
+ * @return {整型}
+ */
 int hex2dec(char c)
 {
     if ('0' <= c && c <= '9')
@@ -183,6 +234,11 @@ int hex2dec(char c)
     }
 }
 
+/**
+ * @description:整型转ASCII码
+ * @param {c 整型}
+ * @return {ASCII码字符}
+ */
 char dec2hex(short int c)
 {
     if (0 <= c && c <= 9)
@@ -199,7 +255,11 @@ char dec2hex(short int c)
     }
 }
 
-//编码一个url
+/**
+ * @description: 编码一个url
+ * @param {url url字符串}
+ * @return {none}
+ */
 void urlencode(char url[])
 {
     int i = 0;
@@ -233,7 +293,11 @@ void urlencode(char url[])
     strcpy(url, res);
 }
 
-// 解码url
+/**
+ * @description:解码url
+ * @param {url 接收字符串}
+ * @return {none}
+ */
 void urldecode(char url[])
 {
     int i = 0;
@@ -260,6 +324,13 @@ void urldecode(char url[])
     strcpy(url, res);
 }
 
+/**
+ * @description:unicode转utf-8
+ * @param {unic 字符的unic编码}
+ * @param {pOutput 输出utf8}
+ * @param {outSize 输出大小}
+ * @return {执行状态}
+ */
 int unicode_to_utf8(unsigned long unic, unsigned char *pOutput, int outSize)
 {
     assert(pOutput != NULL);
@@ -320,6 +391,12 @@ int unicode_to_utf8(unsigned long unic, unsigned char *pOutput, int outSize)
     return 0;
 }
 
+/**
+ * @description: 字符串中删除字符
+ * @param {a 字符串}
+ * @param {c 字符}
+ * @return {none}
+ */
 void strdel(char a[], char c)
 {
     int i, j;

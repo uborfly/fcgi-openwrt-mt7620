@@ -1,3 +1,11 @@
+/*
+ * @Author       : Kexiang Zhang
+ * @Date         : 2020-08-11 16:21:06
+ * @LastEditors  : Kexiang Zhang
+ * @LastEditTime : 2020-09-23 15:31:54
+ * @FilePath     : /fcgi-openwrt-mt7620/inc/utils.h
+ * @Description  : 工具类头文件
+ */
 #ifndef __UTILS_H__
 #define __UTILS_H__
 

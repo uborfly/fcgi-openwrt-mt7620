@@ -1,3 +1,11 @@
+/*
+ * @Author       : Kexiang Zhang
+ * @Date         : 2020-09-23 14:58:48
+ * @LastEditors  : Kexiang Zhang
+ * @LastEditTime : 2020-09-23 14:58:52
+ * @FilePath     : /fcgi-openwrt-mt7620/inc/gpio.h
+ * @Description  : gpio头文件
+ */
 #ifndef __GPIO_H__
 #define __GPIO_H__
 

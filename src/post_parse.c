@@ -1,3 +1,11 @@
+/*
+ * @Author       : Kexiang Zhang
+ * @Date         : 2020-09-23 14:57:46
+ * @LastEditors  : Kexiang Zhang
+ * @LastEditTime : 2020-09-23 15:07:56
+ * @FilePath     : /fcgi-openwrt-mt7620/src/post_parse.c
+ * @Description  : post参数解析
+ */
 #include "post_parse.h"
 #include <stdlib.h>
 #include <stdio.h>
@@ -15,6 +23,12 @@
 #include "blkid/blkid.h"
 #include "multipart_parser.h"
 
+/**
+ * @description:随机数生成
+ * @param {buf 目标buf}
+ * @param {len 目标长度}
+ * @return {none}
+ */
 void fill_random(uint8_t *buf, size_t len)
 {
     int allCount = len / 4;
@@ -38,6 +52,14 @@ void fill_random(uint8_t *buf, size_t len)
     }
 }
 
+/**
+ * @description:SM3哈希生成器
+ * @param {message 源字符串}
+ * @param {len 源字符串长度}
+ * @param {hash 输出字符串}
+ * @param {hash_len 输出字符串长度}
+ * @return {none}
+ */
 int sm3_hash(const unsigned char *message, size_t len, unsigned char *hash, unsigned int *hash_len)
 {
     EVP_MD_CTX *md_ctx;
@@ -52,6 +74,11 @@ int sm3_hash(const unsigned char *message, size_t len, unsigned char *hash, unsi
     return 0;
 }
 
+/**
+ * @description:SM3测试函数，依赖openssl
+ * @param {none}
+ * @return {none}
+ */
 void test_sm3()
 {
     const unsigned char sample1[] = {'a', 'b', 'c', 0};
@@ -71,24 +98,24 @@ void test_sm3()
     LOG("\n");
 }
 
-#define bufLen (1024 * 10)
-#define ROOT "/mnt"
+#define bufLen (1024 * 10) //分包长度
+#define ROOT "/mnt"        //挂载根目录
 
 typedef struct data_cmd
 {
-    char token[32];
-    char path[256];
-    char filename[64];
-    char cnt[8];
-    char remain[8];
-    char data[bufLen * 2];
-    char end[8];
-    char check[8];
-    char length[8];
-    char username[32];
-    char passwd[32];
-    char devname[16];
-    char devtype[8];
+    char token[32];        //认证token
+    char path[256];        //路径
+    char filename[64];     //文件名
+    char cnt[8];           //当前包数
+    char remain[8];        //剩余大小
+    char data[bufLen * 2]; //数据
+    char end[8];           //结束标志
+    char check[8];         //校验
+    char length[8];        //长度
+    char username[32];     //用户名
+    char passwd[32];       //密码
+    char devname[16];      //格式化设备名
+    char devtype[8];       //格式化目标类型
 } data_cmd;
 
 typedef enum
@@ -108,10 +135,15 @@ typedef enum
     DEVTYPE
 } data_type;
 
-char globalToken[0x20];
+char globalToken[0x20]; //全局token存储
 data_cmd g_data_cmd;
 data_type g_data_type;
 
+/**
+ * @description:解析post参数类型
+ * @param {type}
+ * @return {type}
+ */
 int read_header_value(multipart_parser *p, const char *at, size_t length)
 {
     char buf[length];
@@ -178,6 +210,11 @@ int read_header_value(multipart_parser *p, const char *at, size_t length)
     return 0;
 }
 
+/**
+ * @description:解析post参数数据
+ * @param {type}
+ * @return {type}
+ */
 int read_header_data(multipart_parser *p, const char *at, size_t length)
 {
     switch (g_data_type)
@@ -279,6 +316,11 @@ int read_header_data(multipart_parser *p, const char *at, size_t length)
     return 0;
 }
 
+/**
+ * @description:解析post传来的form数据
+ * @param {type}
+ * @return {type}
+ */
 int post_para(int cmd, int length)
 {
     multipart_parser_settings callbacks;

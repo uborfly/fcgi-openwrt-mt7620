@@ -1,3 +1,11 @@
+/*
+ * @Author       : Kexiang Zhang
+ * @Date         : 2020-09-22 11:54:12
+ * @LastEditors  : Kexiang Zhang
+ * @LastEditTime : 2020-09-23 15:33:05
+ * @FilePath     : /fcgi-openwrt-mt7620/src/get_parse.c
+ * @Description  : HTTP GET接口解析
+ */
 #include "fcgi_stdio.h"
 #include <stdlib.h>
 #include <string.h>
@@ -8,6 +16,11 @@ char tokenArray[100][50];
 char getName[100][50];
 char getParam[100][50];
 
+/**
+ * @description:解析各接口，返回接口类型
+ * @param {type}
+ * @return {type}
+ */
 int parse_para(int num)
 {
     int ret = 0;
@@ -88,10 +101,10 @@ int get_para(char *str)
     const char s[2] = "&";
     char *token;
 
-    /* 获取第一个子字符串 */
+    // 获取第一个子字符串
     token = strtok(str, s);
     int i = 0;
-    /* 继续获取其他的子字符串 */
+    // 继续获取其他的子字符串
     while (token != NULL)
     {
         LOG("%s<br />", token);

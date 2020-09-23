@@ -1,3 +1,12 @@
+/*
+ * @Author       : Kexiang Zhang
+ * @Date         : 2020-09-23 14:43:17
+ * @LastEditors  : Kexiang Zhang
+ * @LastEditTime : 2020-09-23 14:58:21
+ * @FilePath     : /fcgi-openwrt-mt7620/src/gpio.c
+ * @Description  : linux gpio初始化、读写操作
+ */
+
 #include <sys/types.h>
 #include <sys/stat.h>
 #include <unistd.h>
@@ -31,6 +40,12 @@ int main(int argc, char const *argv[])
     return 0;
 }
 */
+
+/**
+ * @description:导入gpio
+ * @param {pin io端口号}
+ * @return {执行状态}
+ */
 int gpio_export(int pin)
 {
     char buffer[BUFFER_MAX];
@@ -55,6 +70,11 @@ int gpio_export(int pin)
     return 0;
 }
 
+/**
+ * @description:导出io
+ * @param {pin io端口号}
+ * @return {执行状态} 执行状态
+ */
 int gpio_unexport(int pin)
 {
     char buffer[BUFFER_MAX];
@@ -79,6 +99,12 @@ int gpio_unexport(int pin)
     return 0;
 }
 
+/**
+ * @description:设置io方向
+ * @param {pin io端口号}
+ * @param {dir io方向}
+ * @return {执行状态}
+ */
 int gpio_direction(int pin, int dir)
 {
     static const char dir_str[] = "in\0out";
@@ -103,6 +129,12 @@ int gpio_direction(int pin, int dir)
     return 0;
 }
 
+/**
+ * @description:写入io电平状态
+ * @param {pin io端口号}
+ * @param {value io电平状态}
+ * @return {执行状态}
+ */
 int gpio_write(int pin, int value)
 {
     static const char values_str[] = "01";
@@ -127,6 +159,11 @@ int gpio_write(int pin, int value)
     return 0;
 }
 
+/**
+ * @description:读取io状态
+ * @param {pin io端口号}
+ * @return {读取的io状态}
+ */
 int gpio_read(int pin)
 {
     char path[DIRECTION_MAX];

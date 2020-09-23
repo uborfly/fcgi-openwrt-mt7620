@@ -1,3 +1,11 @@
+/*
+ * @Author       : Kexiang Zhang
+ * @Date         : 2020-08-06 15:16:28
+ * @LastEditors  : Kexiang Zhang
+ * @LastEditTime : 2020-09-23 15:32:35
+ * @FilePath     : /fcgi-openwrt-mt7620/inc/multipart_parser.h
+ * @Description  : post中form-data解析头文件
+ */
 #ifndef _MULTIPART_PARSER_H_
 #define _MULTIPART_PARSER_H_
 

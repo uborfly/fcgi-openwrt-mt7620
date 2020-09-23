@@ -1,3 +1,11 @@
+/*
+ * @Author       : Kexiang Zhang
+ * @Date         : 2020-09-23 14:35:13
+ * @LastEditors  : Kexiang Zhang
+ * @LastEditTime : 2020-09-23 15:31:34
+ * @Description  : 程序入口main(),fcgi初始化
+ * @FilePath     : /fcgi-openwrt-mt7620/src/main.c
+ */
 #include <stdlib.h>
 #include <stdio.h>
 #include <string.h>
@@ -24,7 +32,7 @@ int app_fcgi_init()
             ret_json("500", "missing query params");
             continue;
         }
-        int ret = get_para(getenv("QUERY_STRING"));
+        int ret = get_para(getenv("QUERY_STRING")); //解析接口
 
         LOG("ret = %d <br>", ret);
         //POST PARSE
@@ -34,7 +42,7 @@ int app_fcgi_init()
         if (!strcmp(getenv("REQUEST_METHOD"), "POST") && postLength > 0)
         {
             LOG("<br />POST_METHOD:<br />");
-            post_para(ret, postLength);
+            post_para(ret, postLength); //数据解析处理
         }
         else
         {
@@ -48,6 +56,7 @@ int app_fcgi_init()
 int main(void)
 {
     app_fcgi_init();
+    //多线程模型
     // pthread_t pthread_id;
     // pthread_create(&pthread_id, NULL, app_fcgi_init, NULL);
     // while (1)

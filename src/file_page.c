@@ -1,3 +1,11 @@
+/*
+ * @Author       : Kexiang Zhang
+ * @Date         : 2020-09-08 09:28:27
+ * @LastEditors  : Kexiang Zhang
+ * @LastEditTime : 2020-09-23 15:45:02
+ * @FilePath     : /fcgi-openwrt-mt7620/src/file_page.c
+ * @Description  : 文件管理模块
+ */
 #include "file_page.h"
 #include <stdlib.h>
 #include <string.h>
@@ -12,14 +20,28 @@ int gRecvFileCnt = 0;
 int gRecvFileRemain = 0;
 FILE *g_fp = NULL;
 
-static void get_file_path(const char *path, const char *filename, char *filepath)
+/**
+ * @description:获取文件完整路径
+ * @param {path 文件所在路径}
+ * @param {fileName 文件名}
+ * @param {filePath 输出文件完整路径}
+ * @return {none}
+ */
+static void get_file_path(const char *path, const char *fileName, char *filePath)
 {
-    strcpy(filepath, path);
-    if (filepath[strlen(path) - 1] != '/')
-        strcat(filepath, "/");
-    strcat(filepath, filename);
+    strcpy(filePath, path);
+    if (filePath[strlen(path) - 1] != '/')
+        strcat(filePath, "/");
+    strcat(filePath, fileName);
 }
 
+/**
+ * @description:json返回文件路径
+ * @param {path 文件路径}
+ * @param {fileName 文件名}
+ * @param {val json_object}
+ * @return {none}
+ */
 static void ret_file_path(const char *path, const char *fileName, struct json_object *val)
 {
     char filePath[255];
@@ -49,6 +71,11 @@ static void ret_file_path(const char *path, const char *fileName, struct json_ob
     json_object_array_add(val, j_data);
 }
 
+/**
+ * @description:文件列表返回
+ * @param {path 目标文件列表路径}
+ * @return {执行状态}
+ */
 int file_list_display(char *path)
 {
     // LOG("<br />show_list<br />");
@@ -82,13 +109,24 @@ int file_list_display(char *path)
                 "\r\n"
                 "%s",
                 json_object_to_json_string(j_cfg));
+    return 0;
 }
 
+/**
+ * @description:检查挂载点是否存在磁盘
+ * @param {none}
+ * @return {none}
+ */
 int dev_check()
 {
     return access("/proc/scsi/usb-storage", F_OK);
 }
 
+/**
+ * @description:文件下载
+ * @param {path 目标文件完整路径}
+ * @return {none}
+ */
 void file_download(char *path)
 {
     struct stat statBuf;
@@ -120,6 +158,13 @@ void file_download(char *path)
     fclose(fp);
 }
 
+/**
+ * @description:文件上传初始包入口
+ * @param {path 文件保存路径}
+ * @param {cnt 文件总包数}
+ * @param {remain 剩余包数据长度}
+ * @return {执行状态}
+ */
 int file_upload_init(char *path, int cnt, int remain)
 {
     struct stat statBuf;
@@ -143,6 +188,15 @@ int file_upload_init(char *path, int cnt, int remain)
     return 0;
 }
 
+/**
+ * @description:文件上传数据包入口
+ * @param {fileCnt 当前包数}
+ * @param {dataLength 数据长度}
+ * @param {end 结束标志}
+ * @param {data 文件数据}
+ * @param {check 校验}
+ * @return {执行状态}
+ */
 int file_upload_data(int fileCnt, int dataLength, char *end, char *data, char *check)
 {
     if (fileCnt > gRecvFileCnt)
@@ -168,6 +222,11 @@ int file_upload_data(int fileCnt, int dataLength, char *end, char *data, char *c
     return 0;
 }
 
+/**
+ * @description:创建文件夹
+ * @param {path 创建文件夹的完整路径}
+ * @return {none}
+ */
 void file_create_dir(char *path)
 {
     //check upper dir exist
@@ -214,6 +273,11 @@ void file_create_dir(char *path)
     ret_json("200", "ok");
 }
 
+/**
+ * @description:删除文件
+ * @param {path 删除文件的完整路径}
+ * @return {none}
+ */
 void file_delete(char *path)
 {
     FCGI_printf("Status:200 OK\r\n");
@@ -297,6 +361,12 @@ void file_delete(char *path)
     //return
 }
 
+/**
+ * @description:磁盘给格式化
+ * @param {devName 磁盘分区挂载点}
+ * @param {devType 格式化磁盘目标类型}
+ * @return {执行状态}
+ */
 int disk_format(char *devName, char *devType)
 {
 
