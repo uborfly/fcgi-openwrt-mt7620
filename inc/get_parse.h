@@ -2,7 +2,7 @@
  * @Author       : Kexiang Zhang
  * @Date         : 2020-09-23 15:27:17
  * @LastEditors  : Kexiang Zhang
- * @LastEditTime : 2020-09-23 15:32:54
+ * @LastEditTime : 2020-12-28 14:20:03
  * @FilePath     : /fcgi-openwrt-mt7620/inc/get_parse.h
  * @Description  : HTTP GET接口解析头文件
  */
@@ -20,8 +20,8 @@ typedef enum CMD_PARAM
     FILE_TRANSPORT,  //文件上传时数据传输
     FILE_CREATE_DIR, //创建文件夹
     FILE_DELETE,     //删除文件
-    SAMBA_CONFIG,    //samba配置
-    DISK_TEST,       //磁盘断电
+    VSFTP_CONFIG,    //vsftp配置
+    DISK_POWER,      //磁盘断电
     DEV_LIST,        //磁盘挂载列表获取
     DISK_FORMAT      //磁盘格式化
 };

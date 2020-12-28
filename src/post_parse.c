@@ -2,7 +2,7 @@
  * @Author       : Kexiang Zhang
  * @Date         : 2020-09-23 14:57:46
  * @LastEditors  : Kexiang Zhang
- * @LastEditTime : 2020-12-28 10:28:17
+ * @LastEditTime : 2020-12-28 14:20:24
  * @FilePath     : /fcgi-openwrt-mt7620/src/post_parse.c
  * @Description  : post参数解析
  */
@@ -550,7 +550,7 @@ int post_para(int cmd, int length)
         file_delete(rootPath);
         break;
     }
-    case SAMBA_CONFIG:
+    case VSFTP_CONFIG:
     {
         char *dataBuf;
         char *bufReadP;
@@ -606,13 +606,13 @@ int post_para(int cmd, int length)
         //     ret_json("500", "token无效");
         //     break;
         // }
-        //set samba username and passwd
+        //set vsftp username and passwd
 
         ret_json("200", "ok");
 
         break;
     }
-    case DISK_TEST:
+    case DISK_POWER:
     {
         //get path
         char *dataBuf;

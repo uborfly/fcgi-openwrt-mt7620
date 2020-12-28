@@ -2,7 +2,7 @@
  * @Author       : Kexiang Zhang
  * @Date         : 2020-09-22 11:54:12
  * @LastEditors  : Kexiang Zhang
- * @LastEditTime : 2020-09-23 15:33:05
+ * @LastEditTime : 2020-12-28 14:20:12
  * @FilePath     : /fcgi-openwrt-mt7620/src/get_parse.c
  * @Description  : HTTP GET接口解析
  */
@@ -72,13 +72,13 @@ int parse_para(int num)
         {
             ret = FILE_DELETE;
         }
-        else if (!strcasecmp("samba_config", getParam[i]))
+        else if (!strcasecmp("vsftp_config", getParam[i]))
         {
-            ret = SAMBA_CONFIG;
+            ret = VSFTP_CONFIG;
         }
-        else if (!strcasecmp("disk_test", getParam[i]))
+        else if (!strcasecmp("disk_power", getParam[i]))
         {
-            ret = DISK_TEST;
+            ret = DISK_POWER;
         }
         else if (!strcasecmp("dev_list", getParam[i]))
         {
