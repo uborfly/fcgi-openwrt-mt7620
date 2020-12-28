@@ -2,7 +2,7 @@
  * @Author       : Kexiang Zhang
  * @Date         : 2020-09-23 14:57:46
  * @LastEditors  : Kexiang Zhang
- * @LastEditTime : 2020-09-23 15:07:56
+ * @LastEditTime : 2020-12-28 10:28:17
  * @FilePath     : /fcgi-openwrt-mt7620/src/post_parse.c
  * @Description  : post参数解析
  */
@@ -50,52 +50,6 @@ void fill_random(uint8_t *buf, size_t len)
         r = rand() % UINT32_MAX;
         *(p++) = rr[0];
     }
-}
-
-/**
- * @description:SM3哈希生成器
- * @param {message 源字符串}
- * @param {len 源字符串长度}
- * @param {hash 输出字符串}
- * @param {hash_len 输出字符串长度}
- * @return {none}
- */
-int sm3_hash(const unsigned char *message, size_t len, unsigned char *hash, unsigned int *hash_len)
-{
-    EVP_MD_CTX *md_ctx;
-    const EVP_MD *md;
-
-    md = EVP_sm3();
-    md_ctx = EVP_MD_CTX_new();
-    EVP_DigestInit_ex(md_ctx, md, NULL);
-    EVP_DigestUpdate(md_ctx, message, len);
-    EVP_DigestFinal_ex(md_ctx, hash, hash_len);
-    EVP_MD_CTX_free(md_ctx);
-    return 0;
-}
-
-/**
- * @description:SM3测试函数，依赖openssl
- * @param {none}
- * @return {none}
- */
-void test_sm3()
-{
-    const unsigned char sample1[] = {'a', 'b', 'c', 0};
-    unsigned int sample1_len = strlen((char *)sample1);
-
-    unsigned char hash_value[64];
-    unsigned int i, hash_len;
-
-    sm3_hash(sample1, sample1_len, hash_value, &hash_len);
-    LOG("raw data: %s\n", sample1);
-    LOG("hash length: %d bytes.\n", hash_len);
-    LOG("hash value:\n");
-    for (i = 0; i < hash_len; i++)
-    {
-        LOG("0x%x  ", hash_value[i]);
-    }
-    LOG("\n");
 }
 
 #define bufLen (1024 * 10) //分包长度

@@ -2,7 +2,7 @@
  * @Author       : Kexiang Zhang
  * @Date         : 2020-09-23 14:35:13
  * @LastEditors  : Kexiang Zhang
- * @LastEditTime : 2020-09-23 15:31:34
+ * @LastEditTime : 2020-11-19 14:42:36
  * @Description  : 程序入口main(),fcgi初始化
  * @FilePath     : /fcgi-openwrt-mt7620/src/main.c
  */
@@ -55,6 +55,20 @@ int app_fcgi_init()
 
 int main(void)
 {
+    /*nginx搭建测试*/
+    // int count = 0;
+
+    // while (FCGI_Accept() >= 0)
+    // {
+    //     printf("Content-type: text/html\r\n"
+    //            "\r\n"
+    //            "<title>Hello World</title>"
+    //            "<h1>Hello World from FastCGI!</h1>"
+    //            "Request number is: %d\n",
+    //            ++count);
+    // }
+    /*nginx搭建测试*/
+
     app_fcgi_init();
     //多线程模型
     // pthread_t pthread_id;

@@ -29,6 +29,9 @@ ECHO:
 $(CUR_OBJS):%.o:%.c
 	$(CC) -c $^ -o $(ROOT_DIR)/$(OBJS_DIR)/$@
 
+
+$(info START BUILD)
+
 .PHONY:clean
 clean:
 	@rm $(OBJS_DIR)/*.o
