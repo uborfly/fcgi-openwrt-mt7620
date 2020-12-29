@@ -1,5 +1,5 @@
 CC = mipsel-openwrt-linux-gcc
-FLAG = -lfcgi -ljson-c -lssl -lcrypto -lblkid
+FLAG = -lfcgi -ljson-c -lssl -lcrypto -lblkid -g -ggdb
 # -ludev -levdev
 
 DIR_INC = $(ROOT_DIR)/inc

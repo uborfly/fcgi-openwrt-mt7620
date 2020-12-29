@@ -3,7 +3,7 @@
  # @Author       : Kexiang Zhang
  # @Date         : 2020-12-28 10:08:20
  # @LastEditors  : Kexiang Zhang
- # @LastEditTime : 2020-12-28 10:56:48
+ # @LastEditTime : 2020-12-29 19:34:44
  # @FilePath     : /fcgi-openwrt-mt7620/download.sh
  # @Description  :
 ###
@@ -17,6 +17,12 @@ mv lib* /usr/lib
 
 tftp 192.168.1.103 -g -r nginx.conf
 mv nginx.conf /etc/nginx/
+
+tftp 192.168.1.103 -g -r wireless
+mv wireless /etc/config/
+
+tftp 192.168.1.103 -g -r network
+mv network /etc/config/
 
 tftp 192.168.1.103 -g -r start.sh
 chmod 777 start.sh

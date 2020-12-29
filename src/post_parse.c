@@ -2,7 +2,7 @@
  * @Author       : Kexiang Zhang
  * @Date         : 2020-09-23 14:57:46
  * @LastEditors  : Kexiang Zhang
- * @LastEditTime : 2020-12-28 14:20:24
+ * @LastEditTime : 2020-12-29 20:22:28
  * @FilePath     : /fcgi-openwrt-mt7620/src/post_parse.c
  * @Description  : post参数解析
  */
@@ -294,6 +294,8 @@ int post_para(int cmd, int length)
     FCGI_fread(postBuf, sizeof(char), length, stdin);
 
     postBuf[length] = '\0';
+
+    LOG("*******\n%s*******\n", postBuf);
 
     char *bufReadP;
     int boundaryLen = 0;
