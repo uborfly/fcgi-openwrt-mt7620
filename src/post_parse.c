@@ -2,7 +2,7 @@
  * @Author       : Kexiang Zhang
  * @Date         : 2020-09-23 14:57:46
  * @LastEditors  : Kexiang Zhang
- * @LastEditTime : 2020-12-29 20:22:28
+ * @LastEditTime : 2020-12-30 11:30:01
  * @FilePath     : /fcgi-openwrt-mt7620/src/post_parse.c
  * @Description  : post参数解析
  */
@@ -21,7 +21,6 @@
 #include "file_page.h"
 #include "gpio.h"
 #include "blkid/blkid.h"
-#include "multipart_parser.h"
 
 /**
  * @description:随机数生成
@@ -94,222 +93,36 @@ data_cmd g_data_cmd;
 data_type g_data_type;
 
 /**
- * @description:解析post参数类型
- * @param {type}
- * @return {type}
- */
-int read_header_value(multipart_parser *p, const char *at, size_t length)
-{
-    char buf[length];
-    strncpy(buf, at, length);
-    buf[length] = '\0';
-
-    if (!strcmp(buf, "form-data; name=\"token\""))
-    {
-        g_data_type = TOKEN;
-    }
-    else if (!strcmp(buf, "form-data; name=\"path\""))
-    {
-        g_data_type = PATH;
-    }
-    else if (!strcmp(buf, "form-data; name=\"filename\""))
-    {
-        g_data_type = FILENAME;
-    }
-    else if (!strcmp(buf, "form-data; name=\"cnt\""))
-    {
-        g_data_type = CNT;
-    }
-    else if (!strcmp(buf, "form-data; name=\"remain\""))
-    {
-        g_data_type = REMAIN;
-    }
-    else if (!strcmp(buf, "form-data; name=\"data\""))
-    {
-        g_data_type = DATA;
-    }
-    else if (!strcmp(buf, "form-data; name=\"end\""))
-    {
-        g_data_type = END;
-    }
-    else if (!strcmp(buf, "form-data; name=\"check\""))
-    {
-        g_data_type = CHECK;
-    }
-    else if (!strcmp(buf, "form-data; name=\"length\""))
-    {
-        g_data_type = LENGTH;
-    }
-    else if (!strcmp(buf, "form-data; name=\"username\""))
-    {
-        g_data_type = USERNAME;
-    }
-    else if (!strcmp(buf, "form-data; name=\"passwd\""))
-    {
-        g_data_type = PASSWD;
-    }
-    else if (!strcmp(buf, "form-data; name=\"dev\""))
-    {
-        g_data_type = DEVNAME;
-    }
-    else if (!strcmp(buf, "form-data; name=\"type\""))
-    {
-        g_data_type = DEVTYPE;
-    }
-    else
-    {
-        ret_json("500", "unknown cmd");
-    }
-    // LOG("%s\n", buf);
-    return 0;
-}
-
-/**
- * @description:解析post参数数据
- * @param {type}
- * @return {type}
- */
-int read_header_data(multipart_parser *p, const char *at, size_t length)
-{
-    switch (g_data_type)
-    {
-    case TOKEN:
-    {
-        strncpy(g_data_cmd.token, at, length);
-        g_data_cmd.token[length] = '\0';
-        // LOG("case token %s\n", g_data_cmd.token);
-        break;
-    }
-    case PATH:
-    {
-        strncpy(g_data_cmd.path, at, length);
-        g_data_cmd.path[length] = '\0';
-        // LOG("%s\n", g_data_cmd.path);
-        break;
-    }
-    case FILENAME:
-    {
-        strncpy(g_data_cmd.filename, at, length);
-        g_data_cmd.filename[length] = '\0';
-        // LOG("%s\n", g_data_cmd.filename);
-        break;
-    }
-    case CNT:
-    {
-        strncpy(g_data_cmd.cnt, at, length);
-        g_data_cmd.cnt[length] = '\0';
-        // LOG("%s\n", g_data_cmd.cnt);
-        break;
-    }
-    case REMAIN:
-    {
-        strncpy(g_data_cmd.remain, at, length);
-        g_data_cmd.remain[length] = '\0';
-        // LOG("%s\n", g_data_cmd.remain);
-        break;
-    }
-    case DATA:
-    {
-        strncpy(g_data_cmd.data, at, length);
-        g_data_cmd.data[length] = '\0';
-        // LOG("%s\n", g_data_cmd.data);
-        break;
-    }
-    case END:
-    {
-        strncpy(g_data_cmd.end, at, length);
-        g_data_cmd.end[length] = '\0';
-        // LOG("%s\n", g_data_cmd.end);
-        break;
-    }
-    case CHECK:
-    {
-        strncpy(g_data_cmd.check, at, length);
-        g_data_cmd.check[length] = '\0';
-        // LOG("%s\n", g_data_cmd.check);
-        break;
-    }
-    case LENGTH:
-    {
-        strncpy(g_data_cmd.length, at, length);
-        g_data_cmd.length[length] = '\0';
-        // LOG("%s\n", g_data_cmd.length);
-        break;
-    }
-    case USERNAME:
-    {
-        strncpy(g_data_cmd.username, at, length);
-        g_data_cmd.username[length] = '\0';
-        break;
-    }
-    case PASSWD:
-    {
-        strncpy(g_data_cmd.passwd, at, length);
-        g_data_cmd.passwd[length] = '\0';
-        break;
-    }
-    case DEVNAME:
-    {
-        strncpy(g_data_cmd.devname, at, length);
-        g_data_cmd.devname[length] = '\0';
-        break;
-    }
-    case DEVTYPE:
-    {
-        strncpy(g_data_cmd.devtype, at, length);
-        g_data_cmd.devtype[length] = '\0';
-        break;
-    }
-    default:
-    {
-        LOG("unknown type\n");
-        ret_json("500", "unknown type");
-        break;
-    }
-    }
-    return 0;
-}
-
-/**
- * @description:解析post传来的form数据
+ * @description:解析post传来的json数据
  * @param {type}
  * @return {type}
  */
 int post_para(int cmd, int length)
 {
-    multipart_parser_settings callbacks;
-
-    memset(&callbacks, 0, sizeof(multipart_parser_settings));
-    callbacks.on_header_value = read_header_value;
-    callbacks.on_part_data = read_header_data;
 
     LOG("cmd:%d\tlength:%d\n", cmd, length);
 
-    // if (length < bufLen)
-    //     nowReadLen = length;
-    // else
-    //     nowReadLen = bufLen;
     char postBuf[length];
 
     FCGI_fread(postBuf, sizeof(char), length, stdin);
 
     postBuf[length] = '\0';
 
-    LOG("*******\n%s*******\n", postBuf);
+    LOG("*******\n%s\n*******\n", postBuf);
 
-    char *bufReadP;
-    int boundaryLen = 0;
-    bufReadP = strstr(postBuf, "\r\n");
-    boundaryLen = strlen(postBuf) - strlen(bufReadP);
-    char boundary[boundaryLen];
-    strncpy(boundary, postBuf, boundaryLen);
-    boundary[boundaryLen] = '\0';
-    LOG("boundary:%d\n%s\n", boundaryLen, boundary);
+    //字符串转json
+    struct json_object *obj;
+    obj = json_tokener_parse(postBuf);
+    LOG("new_obj.to_string()=%s\n", json_object_to_json_string(obj));
+    //解析json
+    // json_parse(obj, )
+    // {
+    //     obj = json_object_object_get(obj, "username");
+    //     LOG("new_obj.to_string()=%s\n", json_object_to_json_string(new_obj));
+    // }
 
-    multipart_parser *parser = multipart_parser_init(boundary, &callbacks);
-    multipart_parser_execute(parser, postBuf, length);
-    LOG("multipart_parser_execute\n");
-    multipart_parser_free(parser);
+    // ret_json("200", "ok");
+    // return 0;
 
     switch (cmd)
     {
@@ -319,9 +132,18 @@ int post_para(int cmd, int length)
         break;
     case LOGIN:
     {
-        LOG("username:%s\n", g_data_cmd.username);
-        LOG("passwd:%s\n", g_data_cmd.passwd);
-        if (strcmp(g_data_cmd.username, "admin") || strcmp(g_data_cmd.passwd, "123456"))
+        struct json_object *login_obj;
+        login_obj = json_object_object_get(obj, "username");
+        LOG("username:%s\n", json_object_get_string(login_obj));
+        if (strcmp(json_object_get_string(login_obj), "admin"))
+        {
+            ret_json("500", "错误的用户名或密码");
+            break;
+        }
+
+        login_obj = json_object_object_get(obj, "passwd");
+        LOG("passwd:%s\n", json_object_get_string(login_obj));
+        if (strcmp(json_object_get_string(login_obj), "123456"))
         {
             ret_json("500", "错误的用户名或密码");
             break;
@@ -350,10 +172,12 @@ int post_para(int cmd, int length)
     }
     case FILE_LIST:
     {
+        struct json_object *file_list_obj;
+
         //verify token
-        LOG("token:%s\ng_token:%s\n",
-            g_data_cmd.token, globalToken);
-        if (strncmp(g_data_cmd.token, globalToken, 0x20))
+        file_list_obj = json_object_object_get(obj, "token");
+        LOG("token:%s\n", json_object_get_string(file_list_obj));
+        if (strncmp(json_object_get_string(file_list_obj), globalToken, 0x20))
         {
             ret_json("500", "token无效");
             break;
@@ -364,284 +188,127 @@ int post_para(int cmd, int length)
             ret_json("500", "设备未挂载");
             break;
         }
-        LOG("path:%s\n", g_data_cmd.path);
+        file_list_obj = json_object_object_get(obj, "path");
+        LOG("path:%s\n", json_object_get_string(file_list_obj));
         char rootPath[] = ROOT;
-        strcat(rootPath, g_data_cmd.path);
+        strcat(rootPath, json_object_get_string(file_list_obj));
         file_list_display(rootPath);
-        break;
-    }
-    case FILE_DOWNLOAD:
-    {
-        //verify token
-        LOG("token:%s\ng_token:%s\n",
-            g_data_cmd.token, globalToken);
-        if (strncmp(g_data_cmd.token, globalToken, 0x20))
-        {
-            ret_json("500", "token无效");
-            break;
-        }
-        char rootPath[] = ROOT;
-        strcat(rootPath, g_data_cmd.path);
-        file_download(rootPath);
-        break;
-    }
-    case FILE_UPLOAD:
-    {
-        //verify token
-        LOG("token:%s\ng_token:%s\n",
-            g_data_cmd.token, globalToken);
-        if (strncmp(g_data_cmd.token, globalToken, 0x20))
-        {
-            ret_json("500", "token无效");
-            break;
-        }
-        char path[256 + 64] = "/mnt";
-
-        LOG("path:%s\nfilename:%s\ncnt:%s\nremain:%s\n",
-            g_data_cmd.path, g_data_cmd.filename, g_data_cmd.cnt, g_data_cmd.remain);
-        //path
-        strcat(path, g_data_cmd.path);
-        strcat(path, g_data_cmd.filename);
-        LOG("path:%s\n", path);
-        if (!file_upload_init(path,
-                              tonumber(g_data_cmd.cnt, strlen(g_data_cmd.cnt)),
-                              tonumber(g_data_cmd.remain, strlen(g_data_cmd.remain))))
-            ret_json("200", "ok");
-        break;
-    }
-    case FILE_TRANSPORT:
-    {
-        LOG("token:%s\ng_token:%s\n",
-            g_data_cmd.token, globalToken);
-        //verify token
-        if (strncmp(g_data_cmd.token, globalToken, 0x20))
-        {
-            ret_json("500", "token无效");
-            break;
-        }
-        int dataLength = tonumber(g_data_cmd.length, strlen(g_data_cmd.length));
-        char dataBuf[dataLength];
-        // strcpy(dataBuf, g_data_cmd.data);
-        // dataBuf[bufLen] = '\0';
-
-        LOG("cnt:%s\nlength:%s\ndata:%s\nend:%s\ncheck:%s\n",
-            g_data_cmd.cnt, g_data_cmd.length, g_data_cmd.data, g_data_cmd.end, g_data_cmd.check);
-
-        char writeBuf[bufLen * 2];
-        strcpy(writeBuf, g_data_cmd.data);
-        writeBuf[bufLen * 2] = '\0';
-        for (size_t i = 0; i < dataLength; i++)
-        {
-            if (!checkIsHex(writeBuf[i * 2]) || !checkIsHex(writeBuf[i * 2 + 1]))
-            {
-                // ret_json("501", tostring(dataLength));
-                break;
-            }
-            dataBuf[i] = hexToByte(&writeBuf[i * 2]);
-        }
-
-        if (!file_upload_data(tonumber(g_data_cmd.cnt, strlen(g_data_cmd.cnt)),
-                              dataLength,
-                              g_data_cmd.end,
-                              dataBuf,
-                              g_data_cmd.check))
-            ret_json("200", "ok");
         break;
     }
     case FILE_CREATE_DIR:
     {
-        //get path
-        char *dataBuf;
-        char *bufReadP;
-        char path[32];
-        int boundaryLen = 0;
-        bufReadP = postBuf;
-
-        dataBuf = strstr(postBuf, "name=");
-        boundaryLen = strlen(postBuf) - strlen(dataBuf);
-        LOG("boundaryLen:%d\n", boundaryLen);
-        bufReadP += boundaryLen;
-        sscanf(dataBuf, "name=\"%s%*s", path);
-        if (strcmp(path, "path\""))
-        {
-            ret_json("500", "不符合规定的path");
-            break;
-        }
-        bufReadP += strlen(path) + 7 + strlen("\r\n");
-
-        dataBuf = bufReadP;
-        sscanf(dataBuf, "%s\r\n%*s", path);
-        LOG("path:%s\n", path);
-        //get token
-        char token[32];
-        bufReadP += boundaryLen + strlen(path) + strlen("\r\n");
-
-        sscanf(bufReadP, " name=\"%s\"", token);
-
-        bufReadP += strlen(token) + 7 + strlen("\n");
-
-        sscanf(bufReadP, "%s\r\n%*s", token);
-        LOG("token:%s\n", token);
-        LOG("globalToken:%s\n", globalToken);
         //verify token
-        if (strcmp(token, globalToken))
+        struct json_object *create_dir_obj;
+        create_dir_obj = json_object_object_get(obj, "token");
+        LOG("token:%s\n", json_object_get_string(create_dir_obj));
+        if (strcmp(json_object_get_string(create_dir_obj), globalToken))
         {
+            LOG("globalToken:%s\n", globalToken);
             ret_json("500", "token无效");
             break;
         }
+
         //check mount
         if (dev_check())
         {
             ret_json("500", "设备未挂载");
             break;
         }
+
+        //get path
+        create_dir_obj = json_object_object_get(obj, "path");
+        LOG("path:%s\n", json_object_get_string(create_dir_obj));
+        if (strcmp(json_object_get_string(create_dir_obj), "path\""))
+        {
+            ret_json("500", "不符合规定的path");
+            break;
+        }
+
         char rootPath[] = ROOT;
-        strcat(rootPath, path);
+        strcat(rootPath, json_object_get_string(create_dir_obj));
         file_create_dir(rootPath);
         break;
     }
     case FILE_DELETE:
     {
-        //get path
-        char *dataBuf;
-        char *bufReadP;
-        char path[32];
-        int boundaryLen = 0;
-        bufReadP = postBuf;
-
-        dataBuf = strstr(postBuf, "name=");
-        boundaryLen = strlen(postBuf) - strlen(dataBuf);
-        LOG("boundaryLen:%d\n", boundaryLen);
-        bufReadP += boundaryLen;
-        sscanf(dataBuf, "name=\"%s%*s", path);
-        if (strcmp(path, "path\""))
-        {
-            ret_json("500", "不符合规定的path");
-            break;
-        }
-        bufReadP += strlen(path) + 7 + strlen("\r\n");
-
-        dataBuf = bufReadP;
-        sscanf(dataBuf, "%s\r\n%*s", path);
-        LOG("path:%s\n", path);
-        //get token
-        char token[32];
-        bufReadP += boundaryLen + strlen(path) + strlen("\r\n");
-
-        sscanf(bufReadP, " name=\"%s\"", token);
-
-        bufReadP += strlen(token) + 7 + strlen("\n");
-
-        sscanf(bufReadP, "%s\r\n%*s", token);
-        LOG("token:%s\n", token);
-        LOG("globalToken:%s\n", globalToken);
         //verify token
-        if (strcmp(token, globalToken))
+        struct json_object *delete_obj;
+        delete_obj = json_object_object_get(obj, "token");
+        LOG("token:%s\n", json_object_get_string(delete_obj));
+        if (strcmp(json_object_get_string(delete_obj), globalToken))
         {
+            LOG("globalToken:%s\n", globalToken);
             ret_json("500", "token无效");
             break;
         }
+
         //check mount
         if (dev_check())
         {
             ret_json("500", "设备未挂载");
             break;
         }
+
+        //get path
+        delete_obj = json_object_object_get(obj, "path");
+        LOG("path:%s\n", json_object_get_string(delete_obj));
+        if (strcmp(json_object_get_string(delete_obj), "path\""))
+        {
+            ret_json("500", "不符合规定的path");
+            break;
+        }
+
         char rootPath[] = ROOT;
-        strcat(rootPath, path);
+        strcat(rootPath, json_object_get_string(delete_obj));
         file_delete(rootPath);
         break;
     }
     case VSFTP_CONFIG:
     {
-        char *dataBuf;
-        char *bufReadP;
-        char userName[64];
-        char passwd[64];
-        int boundaryLen = 0;
-        bufReadP = postBuf;
-        //parse username
-        dataBuf = strstr(postBuf, "name=");
-        boundaryLen = strlen(postBuf) - strlen(dataBuf);
-        LOG("boundaryLen:%d\n", boundaryLen);
-        bufReadP += boundaryLen;
-        sscanf(dataBuf, "name=\"%s%*s", userName);
-        if (strcmp(userName, "username\""))
+        //verify token
+        struct json_object *vsftp_cfg_obj;
+        vsftp_cfg_obj = json_object_object_get(obj, "token");
+        LOG("token:%s\n", json_object_get_string(vsftp_cfg_obj));
+        if (strcmp(json_object_get_string(vsftp_cfg_obj), globalToken))
         {
-            ret_json("500", "不符合规定的username");
+            LOG("globalToken:%s\n", globalToken);
+            ret_json("500", "token无效");
             break;
         }
-        bufReadP += strlen(userName) + 7 + strlen("\r\n");
 
-        dataBuf = bufReadP;
-        sscanf(dataBuf, "%s\r\n%*s", userName);
-        LOG("username:%s\n", userName);
+        //parse username
+        vsftp_cfg_obj = json_object_object_get(obj, "username");
+        LOG("username:%s\n", json_object_get_string(vsftp_cfg_obj));
 
         //parse passwd
-        bufReadP += boundaryLen + strlen(userName) + strlen("\r\n");
+        vsftp_cfg_obj = json_object_object_get(obj, "passwd");
+        LOG("passwd:%s\n", json_object_get_string(vsftp_cfg_obj));
 
-        sscanf(bufReadP, " name=\"%s\"", passwd);
-        if (strcmp(passwd, "passwd\""))
-        {
-            ret_json("500", "不符合规定的passwd");
-            break;
-        }
-        bufReadP += strlen(passwd) + 7 + strlen("\r\n");
-
-        sscanf(bufReadP, "%s\r\n%*s", passwd);
-        LOG("passwd:%s\n", passwd);
-
-        //get token
-        char token[32];
-        bufReadP += boundaryLen + strlen(passwd) + 5 + strlen("\r\n");
-
-        sscanf(bufReadP, " name=\"%s\"", token);
-
-        bufReadP += strlen(token) + 7 + strlen("\n");
-
-        sscanf(bufReadP, "%s\r\n%*s", token);
-        LOG("token:%s\n", token);
-        LOG("globalToken:%s\n", globalToken);
-        // //verify token
-        // if (strcmp(token, globalToken))
-        // {
-        //     ret_json("500", "token无效");
-        //     break;
-        // }
         //set vsftp username and passwd
 
         ret_json("200", "ok");
-
         break;
     }
     case DISK_POWER:
     {
-        //get path
-        char *dataBuf;
-        char *bufReadP;
-        char path[32];
-        int boundaryLen = 0;
-        bufReadP = postBuf;
-
-        dataBuf = strstr(postBuf, "name=");
-        boundaryLen = strlen(postBuf) - strlen(dataBuf);
-        LOG("boundaryLen:%d\n", boundaryLen);
-        bufReadP += boundaryLen;
-        sscanf(dataBuf, "name=\"%s%*s", path);
-        if (strcmp(path, "path\""))
+        //verify token
+        struct json_object *vsftp_cfg_obj;
+        vsftp_cfg_obj = json_object_object_get(obj, "token");
+        LOG("token:%s\n", json_object_get_string(vsftp_cfg_obj));
+        if (strcmp(json_object_get_string(vsftp_cfg_obj), globalToken))
         {
-            ret_json("500", "不符合规定的path");
+            LOG("globalToken:%s\n", globalToken);
+            ret_json("500", "token无效");
             break;
         }
-        bufReadP += strlen(path) + 7 + strlen("\r\n");
 
-        dataBuf = bufReadP;
-        sscanf(dataBuf, "%s\r\n%*s", path);
-        LOG("states:%d\n", atoi(path));
+        //get path
+        vsftp_cfg_obj = json_object_object_get(obj, "status");
+        LOG("status:%d\n", json_object_get_int(vsftp_cfg_obj));
 
         gpio_export(1);
         gpio_direction(1, 1);
-        gpio_write(1, atoi(path));
+        gpio_write(1, json_object_get_int(vsftp_cfg_obj));
         LOG("out:%d\n", gpio_read(1));
         ret_json("200", "ok");
         break;
@@ -649,10 +316,12 @@ int post_para(int cmd, int length)
     case DEV_LIST:
     {
         //verify token
-        LOG("token:%s\ng_token:%s\n",
-            g_data_cmd.token, globalToken);
-        if (strncmp(g_data_cmd.token, globalToken, 0x20))
+        struct json_object *vsftp_cfg_obj;
+        vsftp_cfg_obj = json_object_object_get(obj, "token");
+        LOG("token:%s\n", json_object_get_string(vsftp_cfg_obj));
+        if (strcmp(json_object_get_string(vsftp_cfg_obj), globalToken))
         {
+            LOG("globalToken:%s\n", globalToken);
             ret_json("500", "token无效");
             break;
         }
@@ -700,10 +369,12 @@ int post_para(int cmd, int length)
     case DISK_FORMAT:
     {
         //verify token
-        LOG("token:%s\ng_token:%s\n",
-            g_data_cmd.token, globalToken);
-        if (strncmp(g_data_cmd.token, globalToken, 0x20))
+        struct json_object *vsftp_cfg_obj;
+        vsftp_cfg_obj = json_object_object_get(obj, "token");
+        LOG("token:%s\n", json_object_get_string(vsftp_cfg_obj));
+        if (strcmp(json_object_get_string(vsftp_cfg_obj), globalToken))
         {
+            LOG("globalToken:%s\n", globalToken);
             ret_json("500", "token无效");
             break;
         }

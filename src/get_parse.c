@@ -2,7 +2,7 @@
  * @Author       : Kexiang Zhang
  * @Date         : 2020-09-22 11:54:12
  * @LastEditors  : Kexiang Zhang
- * @LastEditTime : 2020-12-28 14:20:12
+ * @LastEditTime : 2020-12-29 20:49:18
  * @FilePath     : /fcgi-openwrt-mt7620/src/get_parse.c
  * @Description  : HTTP GET接口解析
  */
@@ -26,13 +26,13 @@ int parse_para(int num)
     int ret = 0;
     for (int i = 0; i < num; i++)
     {
-        LOG("tokenArray[%d] %s<br />", i, tokenArray[i]);
+        LOG("tokenArray[%d] %s\n", i, tokenArray[i]);
         const char s[2] = "=";
         char *token;
 
         token = strtok(tokenArray[i], s);
         strcpy(getName[i], token);
-        LOG("getName:%s<br />", getName[i]);
+        LOG("getName:%s\n", getName[i]);
 
         if (strcasecmp("cmd", getName[i]))
         {
@@ -42,7 +42,7 @@ int parse_para(int num)
 
         token = strtok(NULL, s);
         strcpy(getParam[i], token);
-        LOG("getParam:%s<br />", getParam[i]);
+        LOG("getParam:%s\n", getParam[i]);
 
         if (!strcasecmp("login", getParam[i]))
         {
@@ -107,12 +107,12 @@ int get_para(char *str)
     // 继续获取其他的子字符串
     while (token != NULL)
     {
-        LOG("%s<br />", token);
+        LOG("interface:%s\n", token);
         strcpy(tokenArray[i], token);
         token = strtok(NULL, s);
         i++;
     }
-    LOG("i=%d<br />", i);
+    LOG("interface count=%d\n", i);
     if (1 == i)
         return parse_para(i);
     else

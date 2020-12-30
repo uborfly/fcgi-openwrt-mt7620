@@ -2,7 +2,7 @@
  * @Author       : Kexiang Zhang
  * @Date         : 2020-09-23 14:35:13
  * @LastEditors  : Kexiang Zhang
- * @LastEditTime : 2020-12-28 14:22:48
+ * @LastEditTime : 2020-12-30 11:25:27
  * @Description  : 程序入口main(),fcgi初始化
  * @FilePath     : /fcgi-openwrt-mt7620/src/main.c
  */
@@ -27,6 +27,13 @@ int app_fcgi_init()
             "\r\n");
 
         //GET PARSE
+        if (strncmp(getenv("CONTENT_TYPE"), "application/json", 16))
+        {
+            LOG("CONTENT_TYPE:%s\n", getenv("CONTENT_TYPE"));
+            ret_json("500", "CONTENT_TYPE错误");
+            continue;
+        }
+
         if (NULL == getenv("QUERY_STRING"))
         {
             ret_json("500", "missing query params");
@@ -34,15 +41,15 @@ int app_fcgi_init()
         }
         int ret = get_para(getenv("QUERY_STRING")); //解析接口
 
-        LOG("ret = %d <br>", ret);
+        LOG("get_para()ret = %d\n", ret);
         //POST PARSE
         postLength = atoi((char *)getenv("CONTENT_LENGTH"));
-        LOG("<br />CONTENT_LENGTH:%d<br />", postLength);
+        LOG("CONTENT_LENGTH:%d\n", postLength);
 
         if (!strcmp(getenv("REQUEST_METHOD"), "POST") && postLength > 0)
         {
-            LOG("<br />POST_METHOD:<br />");
-            post_para(ret, postLength); //数据解析处理
+            LOG("\nPOST_METHOD:\n");
+            post_para(ret, postLength); //接口名称解析处理
         }
         else
         {
