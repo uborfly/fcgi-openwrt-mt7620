@@ -1,6 +1,7 @@
 {
     "files.associations": {
-        "cstdio": "cpp"
+        "cstdio": "cpp",
+        "typeinfo": "c"
     },
     "C_Cpp.dimInactiveRegions": false
 }

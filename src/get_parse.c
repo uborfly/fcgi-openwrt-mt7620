@@ -2,7 +2,7 @@
  * @Author       : Kexiang Zhang
  * @Date         : 2020-09-22 11:54:12
  * @LastEditors  : Kexiang Zhang
- * @LastEditTime : 2020-12-29 20:49:18
+ * @LastEditTime : 2021-01-05 17:06:03
  * @FilePath     : /fcgi-openwrt-mt7620/src/get_parse.c
  * @Description  : HTTP GET接口解析
  */
@@ -87,6 +87,10 @@ int parse_para(int num)
         else if (!strcasecmp("disk_format", getParam[i]))
         {
             ret = DISK_FORMAT;
+        }
+        else if (!strcasecmp("ftp_upload_path", getParam[i]))
+        {
+            ret = FTP_UPLOAD_PATH;
         }
         else
         {

@@ -2,7 +2,7 @@
  * @Author       : Kexiang Zhang
  * @Date         : 2020-09-23 14:57:46
  * @LastEditors  : Kexiang Zhang
- * @LastEditTime : 2020-12-30 11:30:01
+ * @LastEditTime : 2021-01-05 18:02:56
  * @FilePath     : /fcgi-openwrt-mt7620/src/post_parse.c
  * @Description  : post参数解析
  */
@@ -218,11 +218,6 @@ int post_para(int cmd, int length)
         //get path
         create_dir_obj = json_object_object_get(obj, "path");
         LOG("path:%s\n", json_object_get_string(create_dir_obj));
-        if (strcmp(json_object_get_string(create_dir_obj), "path\""))
-        {
-            ret_json("500", "不符合规定的path");
-            break;
-        }
 
         char rootPath[] = ROOT;
         strcat(rootPath, json_object_get_string(create_dir_obj));
@@ -252,11 +247,6 @@ int post_para(int cmd, int length)
         //get path
         delete_obj = json_object_object_get(obj, "path");
         LOG("path:%s\n", json_object_get_string(delete_obj));
-        if (strcmp(json_object_get_string(delete_obj), "path\""))
-        {
-            ret_json("500", "不符合规定的path");
-            break;
-        }
 
         char rootPath[] = ROOT;
         strcat(rootPath, json_object_get_string(delete_obj));
@@ -381,6 +371,37 @@ int post_para(int cmd, int length)
         //check mount
         ret_json("200", "ok");
         disk_format(g_data_cmd.devname, g_data_cmd.devtype);
+        break;
+    }
+    case FTP_UPLOAD_PATH:
+    { //verify token
+        struct json_object *vsftp_cfg_obj;
+        vsftp_cfg_obj = json_object_object_get(obj, "token");
+        LOG("token:%s\n", json_object_get_string(vsftp_cfg_obj));
+        if (strcmp(json_object_get_string(vsftp_cfg_obj), globalToken))
+        {
+            LOG("globalToken:%s\n", globalToken);
+            ret_json("500", "token无效");
+            break;
+        }
+
+        vsftp_cfg_obj = json_object_object_get(obj, "filename");
+        LOG("filename:%d,%s\n", json_object_get_string_len(vsftp_cfg_obj), json_object_get_string(vsftp_cfg_obj));
+        if (json_object_get_string_len(vsftp_cfg_obj) > 255)
+        {
+            ret_json("500", "文件名过长");
+            break;
+        }
+        char name[255];
+        strncpy(name, json_object_get_string(vsftp_cfg_obj), json_object_get_string_len(vsftp_cfg_obj));
+
+        vsftp_cfg_obj = json_object_object_get(obj, "path");
+        LOG("path:%s\n", json_object_get_string(vsftp_cfg_obj));
+
+        if (file_copy(name, json_object_get_string(vsftp_cfg_obj)))
+            ret_json("500", "文件不存在");
+        else
+            ret_json("200", "ok");
         break;
     }
     default:

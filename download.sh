@@ -3,7 +3,7 @@
  # @Author       : Kexiang Zhang
  # @Date         : 2020-12-28 10:08:20
  # @LastEditors  : Kexiang Zhang
- # @LastEditTime : 2020-12-29 19:34:44
+ # @LastEditTime : 2021-01-05 17:26:40
  # @FilePath     : /fcgi-openwrt-mt7620/download.sh
  # @Description  :
 ###
@@ -23,6 +23,9 @@ mv wireless /etc/config/
 
 tftp 192.168.1.103 -g -r network
 mv network /etc/config/
+
+tftp 192.168.1.103 -g -r vsftpd.conf
+mv vsftpd.conf /etc/
 
 tftp 192.168.1.103 -g -r start.sh
 chmod 777 start.sh

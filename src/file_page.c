@@ -2,7 +2,7 @@
  * @Author       : Kexiang Zhang
  * @Date         : 2020-09-08 09:28:27
  * @LastEditors  : Kexiang Zhang
- * @LastEditTime : 2020-09-23 15:45:02
+ * @LastEditTime : 2021-01-05 17:57:24
  * @FilePath     : /fcgi-openwrt-mt7620/src/file_page.c
  * @Description  : 文件管理模块
  */
@@ -119,7 +119,8 @@ int file_list_display(char *path)
  */
 int dev_check()
 {
-    return access("/proc/scsi/usb-storage", F_OK);
+    // return access("/proc/scsi/usb-storage", F_OK);
+    return 0;
 }
 
 /**
@@ -231,12 +232,12 @@ void file_create_dir(char *path)
 {
     //check upper dir exist
     char *retDirName = strrchr(path, '/');
-    printf("dest dir:%s\n", retDirName);
+    LOG("dest dir:%s\n", retDirName);
     char upperDir[strlen(path) - strlen(retDirName)];
     strncpy(upperDir, path, strlen(path) - strlen(retDirName));
     upperDir[strlen(path) - strlen(retDirName)] = '\0';
-    printf("upperDir dir:%s\n", upperDir);
-    printf("path:%s\n", path);
+    LOG("upperDir dir:%s\n", upperDir);
+    LOG("path:%s\n", path);
     struct stat statBuf;
     if (access(upperDir, F_OK))
     {
@@ -247,7 +248,7 @@ void file_create_dir(char *path)
     //check dir exist
     if (!access(path, F_OK))
     {
-        printf("文件存在，判断是否为文件夹\n");
+        LOG("文件存在，判断是否为文件夹\n");
 
         //is it dir
         stat(path, &statBuf);
@@ -280,17 +281,14 @@ void file_create_dir(char *path)
  */
 void file_delete(char *path)
 {
-    FCGI_printf("Status:200 OK\r\n");
-    FCGI_printf("Content-type: application/json;charset=utf-8\r\n"
-                "\r\n");
     //check upper dir exist
     char *retDirName = strrchr(path, '/');
-    printf("dest dir:%s\n", retDirName);
+    LOG("dest dir:%s\n", retDirName);
     char upperDir[strlen(path) - strlen(retDirName)];
     strncpy(upperDir, path, strlen(path) - strlen(retDirName));
     upperDir[strlen(path) - strlen(retDirName)] = '\0';
-    printf("upperDir dir:%s\n", upperDir);
-    printf("path:%s\n", path);
+    LOG("upperDir dir:%s\n", upperDir);
+    LOG("path:%s\n", path);
     struct stat statBuf;
     if (access(upperDir, F_OK))
     {
@@ -301,7 +299,7 @@ void file_delete(char *path)
     //check file exist
     if (!access(path, F_OK))
     {
-        printf("文件存在，判断是否为文件夹\n");
+        LOG("文件存在，判断是否为文件夹\n");
 
         //is it dir
         DIR *dir;
@@ -363,12 +361,28 @@ void file_delete(char *path)
 
 /**
  * @description:磁盘给格式化
- * @param {devName 磁盘分区挂载点}
- * @param {devType 格式化磁盘目标类型}
+ * @param {char} *devName 磁盘分区挂载点
+ * @param {char} *devType 格式化磁盘目标类型
  * @return {执行状态}
  */
 int disk_format(char *devName, char *devType)
 {
 
+    return 0;
+}
+
+/**
+ * @description:
+ * @param {char} *name 文件名
+ * @param {char} *path 文件绝对路径
+ * @return {执行状态}
+ */
+int file_copy(char *name, char *path)
+{
+    if (access(name, F_OK))
+        return 1;
+    char cmd[256];
+    sprintf(cmd, "mv /mnt/%s /mnt/%s", name, path);
+    system(cmd);
     return 0;
 }
