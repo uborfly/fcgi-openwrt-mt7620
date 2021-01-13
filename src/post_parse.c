@@ -2,7 +2,7 @@
  * @Author       : Kexiang Zhang
  * @Date         : 2020-09-23 14:57:46
  * @LastEditors  : Kexiang Zhang
- * @LastEditTime : 2021-01-05 18:02:56
+ * @LastEditTime : 2021-01-12 09:52:04
  * @FilePath     : /fcgi-openwrt-mt7620/src/post_parse.c
  * @Description  : post参数解析
  */
@@ -392,8 +392,10 @@ int post_para(int cmd, int length)
             ret_json("500", "文件名过长");
             break;
         }
-        char name[255];
-        strncpy(name, json_object_get_string(vsftp_cfg_obj), json_object_get_string_len(vsftp_cfg_obj));
+        char name[255] = "/mnt/";
+        strncat(name, json_object_get_string(vsftp_cfg_obj), json_object_get_string_len(vsftp_cfg_obj));
+
+        // strncpy(name, json_object_get_string(vsftp_cfg_obj), json_object_get_string_len(vsftp_cfg_obj));
 
         vsftp_cfg_obj = json_object_object_get(obj, "path");
         LOG("path:%s\n", json_object_get_string(vsftp_cfg_obj));

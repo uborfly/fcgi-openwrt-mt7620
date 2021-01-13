@@ -2,7 +2,7 @@
  * @Author       : Kexiang Zhang
  * @Date         : 2020-09-08 09:28:27
  * @LastEditors  : Kexiang Zhang
- * @LastEditTime : 2021-01-05 17:57:24
+ * @LastEditTime : 2021-01-12 09:51:18
  * @FilePath     : /fcgi-openwrt-mt7620/src/file_page.c
  * @Description  : 文件管理模块
  */
@@ -45,6 +45,7 @@ static void get_file_path(const char *path, const char *fileName, char *filePath
 static void ret_file_path(const char *path, const char *fileName, struct json_object *val)
 {
     char filePath[255];
+    char *fileType = "file";
     struct stat statBuf;
 
     strcpy(filePath, path);
@@ -58,6 +59,7 @@ static void ret_file_path(const char *path, const char *fileName, struct json_ob
     json_object *j_data = json_object_new_object();
 
     json_object_object_add(j_data, "name", json_object_new_string(fileName));
+
     json_object_object_add(j_data, "create_time", json_object_new_string(ctime(&statBuf.st_ctime)));
     if (S_ISDIR(statBuf.st_mode)) //判断是否是目录
     {
@@ -65,7 +67,10 @@ static void ret_file_path(const char *path, const char *fileName, struct json_ob
     }
     else if (S_ISREG(statBuf.st_mode))
     {
+        fileType = strrchr(fileName, '.') + 1;
+        LOG("fileType:%s\n", fileType);
         json_object_object_add(j_data, "size", json_object_new_string(tostring(statBuf.st_size)));
+        json_object_object_add(j_data, "type", json_object_new_string(fileType));
     }
 
     json_object_array_add(val, j_data);
@@ -380,9 +385,13 @@ int disk_format(char *devName, char *devType)
 int file_copy(char *name, char *path)
 {
     if (access(name, F_OK))
+    {
+        LOG("file_copy_name:%s\n", name);
         return 1;
+    }
     char cmd[256];
-    sprintf(cmd, "mv /mnt/%s /mnt/%s", name, path);
+    LOG("mv %s /mnt%s\n", name, path);
+    sprintf(cmd, "mv %s /mnt%s", name, path);
     system(cmd);
     return 0;
 }
