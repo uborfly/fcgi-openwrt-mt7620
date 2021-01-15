@@ -2,7 +2,7 @@
  * @Author       : Kexiang Zhang
  * @Date         : 2020-09-23 14:57:46
  * @LastEditors  : Kexiang Zhang
- * @LastEditTime : 2021-01-12 09:52:04
+ * @LastEditTime : 2021-01-14 17:49:23
  * @FilePath     : /fcgi-openwrt-mt7620/src/post_parse.c
  * @Description  : post参数解析
  */
@@ -21,6 +21,7 @@
 #include "file_page.h"
 #include "gpio.h"
 #include "blkid/blkid.h"
+#include "sys/statfs.h"
 
 /**
  * @description:随机数生成
@@ -331,6 +332,7 @@ int post_para(int cmd, int length)
         for (int i = 1; i < 100; i++)
         {
             char pathBuf[11];
+            char mnt_path[32] = "/mnt";
 
             strcpy(pathBuf, path);
             strcat(pathBuf, tostring(i));
@@ -340,9 +342,29 @@ int post_para(int cmd, int length)
                 // ret_json("500", "磁盘分区不存在");
                 continue;
             }
-            json_object *j_data = json_object_new_string(pathBuf);
+            LOG("mnt_path:%s\n", strrchr(pathBuf, '/'));
+            strcat(mnt_path, strrchr(pathBuf, '/'));
+            LOG("mnt_path:%s\n", mnt_path);
+            struct statfs diskInfo;
+            statfs(mnt_path, &diskInfo);
+            unsigned long long totalBlocks = diskInfo.f_bsize;
+            unsigned long long totalSize = totalBlocks * diskInfo.f_blocks;
+            size_t mbTotalsize = totalSize >> 20;
+            unsigned long long freeDisk = diskInfo.f_bfree * totalBlocks;
+            size_t mbFreedisk = freeDisk >> 20;
+            LOG("/  total=%dMB, free=%dMB\n", mbTotalsize, mbFreedisk);
+
+            json_object *dev = json_object_new_string(pathBuf);
+            json_object *total = json_object_new_int64(mbTotalsize);
+            json_object *free = json_object_new_int64(mbFreedisk);
+
+            json_object *j_devinfo = json_object_new_object();
+            json_object_object_add(j_devinfo, "dev", dev);
+            json_object_object_add(j_devinfo, "total", total);
+            json_object_object_add(j_devinfo, "free", free);
+
             // LOG("%s\n", pathBuf);
-            json_object_array_add(j_array, j_data);
+            json_object_array_add(j_array, j_devinfo);
         }
         json_object *j_cfg = json_object_new_object();
         json_object_object_add(j_cfg, "code", j_code);
